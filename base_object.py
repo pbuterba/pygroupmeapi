@@ -39,13 +39,80 @@ class GroupMe:
         self.email = user_info['email']
         self.phone_number = user_info['phone_number']
 
-    def get_chat(self, chat_name: str) -> Chat:
+    def _get_group(self, group_name: str) -> Group | None:
+        """
+        @brief  Gets a group by the specified name
+        @param  group_name (str): The name of the group
+        @return (Group) An object representing the group
+        """
+        # Get groups
+        url = f'{BASE_URL}/groups{TOKEN_POSTFIX}{self.token}'
+        params = {
+            'page': 1,
+            'per_page': 10,
+            'omit': 'memberships'
+        }
+
+        # Loop through groups
+        group_page = call_api(url, params, 'Unexpected error searching groups')
+        while len(group_page) > 0:
+            # Loop over page
+            for i, group in enumerate(group_page):
+                if group['name'] == group_name:
+                    return Group(group)
+
+            # Get next page
+            params['page'] = params['page'] + 1
+            group_page = call_api(url, params, 'Unexpected error searching groups')
+
+        return None
+
+    def _get_dm(self, user_name: str) -> DirectMessage | None:
+        """
+        @brief  Gets a group by the specified name
+        @param  user_name (str): The name of the other user of the direct message
+        @return (DirectMessage) An object representing the direct message chat
+        """
+        # Get groups
+        url = f'{BASE_URL}/chats{TOKEN_POSTFIX}{self.token}'
+        params = {
+            'page': 1,
+            'per_page': 10
+        }
+
+        # Loop through groups
+        dm_page = call_api(url, params, 'Unexpected error searching direct messages')
+        while len(dm_page) > 0:
+            # Loop over page
+            for dm in dm_page:
+                if dm['other_user']['name'] == user_name:
+                    return DirectMessage(dm)
+
+            # Get next page
+            params['page'] = params['page'] + 1
+            dm_page = call_api(url, params, 'Unexpected error searching direct messages')
+
+        return None
+
+    def get_chat(self, chat_name: str, is_dm: bool = False) -> Chat:
         """
         @brief Returns an object for a chat
         @param chat_name (str): The name of the chat to return
+        @param is_dm (bool): Performance enhancing flag to specify that the desired chat is a direct message
+                             if false, search begins with groups (as opposed to DMs), which can be time consuming
+                             if the user has a lot of groups
         @return (Chat) A GroupMe chat object
         """
-        pass
+        if is_dm:
+            chat = self._get_dm(chat_name)
+        else:
+            chat = self._get_group(chat_name)
+            if chat is None:
+                chat = self._get_dm(chat_name)
+
+        if chat is None:
+            raise GroupMeException(f'No chat found with the name {chat_name}')
+        return chat
 
     def get_chats(self, last_used: str = '', verbose: bool = False) -> List:
         """
