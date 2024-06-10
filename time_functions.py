@@ -73,3 +73,45 @@ def to_twelve_hour_time(hour: int, minute: int, second: int) -> str:
         return f'12:{str(minute).zfill(2)}:{str(second).zfill(2)} PM'
     else:
         return f'{hour - 12}:{str(minute).zfill(2)}:{str(second).zfill(2)} PM'
+
+
+def string_to_epoch(time_string: str) -> int:
+    """
+    @brief Converts a date/time string formatted as "MM/dd/yyyy" or "MM/dd/yyyy" to seconds since epoch
+    @param time_string (str): The date or time string
+    @return (int): The number of seconds since epoch
+    """
+    # Split into date and time components
+    components = time_string.split(' ')
+    if len(components) > 2:
+        raise GroupMeException('Time strings must be formatted as "MM/dd/yyyy" or "MM/dd/yyyy hh:mm:ss"')
+
+    date_component = components[0]
+    if len(components) == 2:
+        time_component = components[1]
+    else:
+        time_component = '00:00:00'
+
+    # Split components into numbers
+    date_numbers = date_component.split('/')
+    if len(date_numbers) != 3:
+        raise GroupMeException('Improperly formatted date. Must be formatted as "MM/dd/yyyy" or "MM/dd/yyyy hh:mm:ss"')
+    try:
+        month = int(date_numbers[0])
+        day = int(date_numbers[1])
+        year = int(date_numbers[2])
+    except ValueError:
+        raise GroupMeException('Invalid numeric values provided for date. Must be formatted as "MM/dd/yyyy" or "MM/dd/yyyy hh:mm:ss"')
+
+    time_numbers = time_component.split(':')
+    if len(time_numbers) != 3:
+        raise GroupMeException('Improperly formatted date. Must be formatted as "MM/dd/yyyy" or "MM/dd/yyyy hh:mm:ss"')
+    try:
+        hour = int(time_numbers[0])
+        minute = int(time_numbers[1])
+        second = int(time_numbers[2])
+    except ValueError:
+        raise GroupMeException('Invalid numeric values provided for time. Must be formatted as "MM/dd/yyy" or "MM/dd/yyyy hh:mm:ss"')
+
+    # Convert to epoch time
+    return int(datetime(year, month, day, hour, minute, second).timestamp())

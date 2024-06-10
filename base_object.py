@@ -20,7 +20,7 @@ from groupme.chat import Chat, Group, DirectMessage
 # noinspection PyUnresolvedReferences
 from groupme.common_utils import BASE_URL, TOKEN_POSTFIX, GroupMeException
 # noinspection PyUnresolvedReferences
-from groupme.time_functions import to_seconds
+from groupme.time_functions import to_seconds, string_to_epoch
 
 
 class GroupMe:
@@ -99,7 +99,7 @@ class GroupMe:
         @brief Returns an object for a chat
         @param chat_name (str): The name of the chat to return
         @param is_dm (bool): Performance enhancing flag to specify that the desired chat is a direct message
-                             if false, search begins with groups (as opposed to DMs), which can be time consuming
+                             if false, search begins with groups (as opposed to DMs), which can be time-consuming
                              if the user has a lot of groups
         @return (Chat) A GroupMe chat object
         """
@@ -219,6 +219,28 @@ class GroupMe:
                 group_index = group_index + 1
 
         return chats
+
+    def get_messages(self, output_file: str = '', before: str = '', after: str = '', keyword: str = '', limit: int = -1, suppress_warning: bool = False) -> List:
+        """
+        @brief Searches for messages meeting the given criteria
+        @param output_file      (str):  The name of a file into which to direct the output. If blank, no output is provided
+                                        if specified as "console", it will output to the console
+        @param before           (str):  A date string formatted either as "MM/dd/yyyy or MM/dd/yyyy hh:mm:ss" indicating the
+                                        time before which messages should have been sent
+        @param after            (str):  A date string formatted either as "MM/dd/yyyy" or "MM/dd/yyyy hh:mm:ss" indicating the
+                                        time after which messages should have been sent
+        @param keyword          (str):  A string of text which messages should contain
+        @param suppress_warning (bool): If very few parameters are specified, and the search is expected to return a lot
+                                        of results, a prompt is displayed by default requiring the user to confirm the
+                                        search. Specifying this parameter as true bypasses this prompt, and immediately
+                                        proceeds with the search
+        @return (List) A list of the message objects returned by the search
+        """
+        if before != '':
+            before = string_to_epoch(before)
+        if after != '':
+            after = string_to_epoch(after)
+        return []
 
 
 def call_api(url: str, params: Dict | None = None, except_message: str | None = None) -> List | Dict:
