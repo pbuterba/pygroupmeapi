@@ -11,8 +11,8 @@
 # Imports
 from typing import Dict
 
-from groupme.common_utils import call_api
-from groupme.time_functions import epoch_to_string
+from common_utils import call_api
+from time_functions import epoch_to_string
 
 
 class Chat:

@@ -15,9 +15,9 @@ import requests
 from typing import List
 import time
 
-from groupme.chat import Chat, Group, DirectMessage
-from groupme.common_utils import BASE_URL, TOKEN_POSTFIX, call_api, GroupMeException
-from groupme.time_functions import to_seconds, string_to_epoch
+from chat import Chat, Group, DirectMessage
+from common_utils import BASE_URL, TOKEN_POSTFIX, call_api, GroupMeException
+from time_functions import to_seconds, string_to_epoch
 
 
 class GroupMe:
