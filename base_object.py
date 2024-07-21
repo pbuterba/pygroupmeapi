@@ -1,9 +1,9 @@
 """
-@package groupme_api
+@package groupme
 @brief   A Python object implementation of the GroupMe API
 
 @date    6/1/2024
-@updated 6/1/2024
+@updated 7/20/2024
 
 @author  Preston Buterbaugh
 @credit  GroupMe API info: https://dev.groupme.com/docs/v3
@@ -12,14 +12,11 @@
 from datetime import datetime
 import json
 import requests
-from typing import List, Dict
+from typing import List
 import time
 
-# noinspection PyUnresolvedReferences
 from groupme.chat import Chat, Group, DirectMessage
-# noinspection PyUnresolvedReferences
-from groupme.common_utils import BASE_URL, TOKEN_POSTFIX, GroupMeException
-# noinspection PyUnresolvedReferences
+from groupme.common_utils import BASE_URL, TOKEN_POSTFIX, call_api, GroupMeException
 from groupme.time_functions import to_seconds, string_to_epoch
 
 
@@ -29,7 +26,7 @@ class GroupMe:
         @brief Constructor
         @param token (str): The user's GroupMe API access token
         """
-        url = f'{BASE_URL}/users/me{TOKEN_POSTFIX}{token}'
+        url = f'{BASE_URL}users/me{TOKEN_POSTFIX}{token}'
         response = requests.get(url)
         if response.status_code != 200:
             raise GroupMeException('Invalid access token')
@@ -46,7 +43,7 @@ class GroupMe:
         @return (Group) An object representing the group
         """
         # Get groups
-        url = f'{BASE_URL}/groups{TOKEN_POSTFIX}{self.token}'
+        url = 'groups'
         params = {
             'page': 1,
             'per_page': 10,
@@ -54,16 +51,16 @@ class GroupMe:
         }
 
         # Loop through groups
-        group_page = call_api(url, params, 'Unexpected error searching groups')
+        group_page = call_api(url, self.token, params, 'Unexpected error searching groups')
         while len(group_page) > 0:
             # Loop over page
             for i, group in enumerate(group_page):
                 if group['name'] == group_name:
-                    return Group(group)
+                    return Group(group, self.token)
 
             # Get next page
             params['page'] = params['page'] + 1
-            group_page = call_api(url, params, 'Unexpected error searching groups')
+            group_page = call_api(url, self.token, params, 'Unexpected error searching groups')
 
         return None
 
@@ -74,14 +71,14 @@ class GroupMe:
         @return (DirectMessage) An object representing the direct message chat
         """
         # Get groups
-        url = f'{BASE_URL}/chats{TOKEN_POSTFIX}{self.token}'
+        url = 'chats'
         params = {
             'page': 1,
             'per_page': 10
         }
 
         # Loop through groups
-        dm_page = call_api(url, params, 'Unexpected error searching direct messages')
+        dm_page = call_api(url, self.token, params, 'Unexpected error searching direct messages')
         while len(dm_page) > 0:
             # Loop over page
             for dm in dm_page:
@@ -90,7 +87,7 @@ class GroupMe:
 
             # Get next page
             params['page'] = params['page'] + 1
-            dm_page = call_api(url, params, 'Unexpected error searching direct messages')
+            dm_page = call_api(url, self.token, params, 'Unexpected error searching direct messages')
 
         return None
 
@@ -129,7 +126,7 @@ class GroupMe:
         cutoff = get_cutoff(last_used)
 
         # Get groups
-        url = f'{BASE_URL}/groups{TOKEN_POSTFIX}{self.token}'
+        url = f'groups'
         params = {
             'page': 1,
             'per_page': 10,
@@ -137,8 +134,9 @@ class GroupMe:
         }
 
         # Loop through all group pages
-        group_page = call_api(url, params=params, except_message='Unexpected error fetching groups')
+        group_page = call_api(url, self.token, params=params, except_message='Unexpected error fetching groups')
         in_range = True
+        num_groups = 0
         while len(group_page) > 0 and in_range:
             # Loop over page
             for i, group in enumerate(group_page):
@@ -151,27 +149,28 @@ class GroupMe:
 
                 # Output progress if requested
                 if verbose:
-                    print(f'\rFetching groups ({(params["page"] - 1) * params["per_page"] + i + 1} retrieved)...', end='')
+                    num_groups = num_groups + 1
+                    print(f'\rFetching groups ({num_groups} retrieved)...', end='')
 
                 # Add to list of groups
-                groups.append(Group(group))
+                groups.append(Group(group, self.token))
 
             # Get next page
             params['page'] = params['page'] + 1
-            group_page = call_api(url, params=params, except_message='Unexpected error fetching groups')
+            group_page = call_api(url, self.token, params=params, except_message='Unexpected error fetching groups')
 
         if verbose:
-            print()
+            print(f'\rFetched {num_groups} groups')
 
         # Get direct messages
-        url = f'{BASE_URL}/chats{TOKEN_POSTFIX}{self.token}'
+        url = f'chats'
         params = {
             'page': 1,
             'per_page': 10
         }
 
         # Loop through all direct message pages
-        dm_page = call_api(url, params=params, except_message='Unexpected error fetching direct messages')
+        dm_page = call_api(url, self.token, params=params, except_message='Unexpected error fetching direct messages')
         in_range = True
         num_chats = 0
         while len(dm_page) > 0 and in_range:
@@ -194,16 +193,16 @@ class GroupMe:
 
             # Get next page
             params['page'] = params['page'] + 1
-            dm_page = call_api(url, params=params, except_message='Unexpected error fetching direct messages')
+            dm_page = call_api(url, self.token, params=params, except_message='Unexpected error fetching direct messages')
 
         if verbose:
-            print()
+            print(f'\rFetched {num_chats} direct messages')
 
         # Merge lists
         group_index = 0
         dm_index = 0
         while group_index < len(groups) and dm_index < len(direct_messages):
-            if groups[group_index].last_used > direct_messages[dm_index].last_used:
+            if groups[group_index].last_used_epoch > direct_messages[dm_index].last_used_epoch:
                 chats.append(groups[group_index])
                 group_index = group_index + 1
             else:
@@ -241,27 +240,6 @@ class GroupMe:
         if after != '':
             after = string_to_epoch(after)
         return []
-
-
-def call_api(url: str, params: Dict | None = None, except_message: str | None = None) -> List | Dict:
-    """
-    @brief Makes a get call to the API, handles errors, and returns extracted data
-    @param url (str): The URL for the endpoint to which to make the API request
-    @param params (Dict): Parameters to pass into the request
-    @param except_message:
-    @return:
-    """
-    # Handle optional parameter
-    if params is None:
-        params = {}
-    if except_message is None:
-        except_message = 'Unspecified error occurred'
-
-    # Make API call
-    response = requests.get(url, params=params)
-    if response.status_code != 200:
-        raise GroupMeException(except_message)
-    return json.loads(response.text)['response']
 
 
 def get_cutoff(last_used: str) -> int | None:
