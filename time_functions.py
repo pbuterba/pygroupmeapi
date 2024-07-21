@@ -1,9 +1,9 @@
 """
-@package groupme_api
+@package groupme
 @brief   Helper functions to manipulate time objects
 
 @date    6/1/2024
-@updated 6/1/2024
+@updated 7/20/2024
 
 @author Preston Buterbaugh
 """
@@ -11,8 +11,7 @@
 from datetime import datetime
 import time
 
-# noinspection PyUnresolvedReferences
-from groupme.common_utils import GroupMeException
+from common_utils import GroupMeException
 
 
 def to_seconds(number: int, units: str) -> int:
@@ -115,3 +114,13 @@ def string_to_epoch(time_string: str) -> int:
 
     # Convert to epoch time
     return int(datetime(year, month, day, hour, minute, second).timestamp())
+
+
+def epoch_to_string(epoch: int) -> str:
+    """
+    @brief  Converts a point in time expressed as seconds from epoch to a string
+    @param  epoch (int): A point in time specified in seconds from epoch
+    @return (str) A string representation of the point in time
+    """
+    time_obj = time.localtime(epoch)
+    return f'{time_obj.tm_mon}/{time_obj.tm_mday}/{time_obj.tm_year} {to_twelve_hour_time(time_obj.tm_hour, time_obj.tm_min, time_obj.tm_sec)}'
