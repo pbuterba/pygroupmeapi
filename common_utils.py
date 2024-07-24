@@ -3,7 +3,7 @@
 @brief   General purpose utilities for the GroupMe API
 
 @date    6/1/2024
-@updated 6/1/2024
+@updated 7/23/2024
 
 @author Preston Buterbaugh
 """
@@ -17,10 +17,10 @@ BASE_URL = 'https://api.groupme.com/v3/'
 TOKEN_POSTFIX = '?token='
 
 
-def call_api(url: str, token: str, params: Dict | None = None, except_message: str | None = None) -> List | Dict:
+def call_api(endpoint: str, token: str, params: Dict | None = None, except_message: str | None = None) -> List | Dict:
     """
     @brief Makes a get call to the API, handles errors, and returns extracted data
-    @param  url (str): The URL for the endpoint to which to make the API request
+    @param  endpoint (str): The API endpoint to which to send the API request
     @param  token (str): The GroupMe access token
     @param  params (Dict): Parameters to pass into the request
     @param  except_message (str): A message to output if API call fails
@@ -33,7 +33,7 @@ def call_api(url: str, token: str, params: Dict | None = None, except_message: s
         except_message = 'Unspecified error occurred'
 
     # Make API call
-    response = requests.get(f'{BASE_URL}{url}{TOKEN_POSTFIX}{token}', params=params)
+    response = requests.get(f'{BASE_URL}{endpoint}{TOKEN_POSTFIX}{token}', params=params)
     if response.status_code != 200:
         raise GroupMeException(except_message)
     return json.loads(response.text)['response']
