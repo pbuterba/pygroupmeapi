@@ -3,7 +3,7 @@
 @brief   A Python object implementation of the GroupMe API
 
 @date    6/1/2024
-@updated 7/20/2024
+@updated 7/23/2024
 
 @author  Preston Buterbaugh
 @credit  GroupMe API info: https://dev.groupme.com/docs/v3
@@ -111,19 +111,22 @@ class GroupMe:
             raise GroupMeException(f'No chat found with the name {chat_name}')
         return chat
 
-    def get_chats(self, last_used: str = '', verbose: bool = False) -> List:
+    def get_chats(self, used_after: str = '', created_before: str = '', verbose: bool = False) -> List:
         """
         @brief Returns a list of all the user's chats
-        @param last_used (str): String specifying how recently the chat should have been used. If empty, all groups are fetched
-        @param verbose (bool): If output should be printed showing progress
+        @param used_after     (str): String specifying how recently the chat should have been used. If empty, all groups are fetched
+        @param created_before (str): String specifying a minimum age (in time) or a date before which a chat must have been created
+                                     to be included. If empty, groups are fetched regardless of creation time
+        @param verbose        (bool): If output should be printed showing progress
         @return (List) A list of GroupMe Chat objects
         """
         groups = []
         direct_messages = []
         chats = []
 
-        # Determine cutoff (if applicable)
-        cutoff = get_cutoff(last_used)
+        # Determine cutoffs (if applicable)
+        earliest_last_used_time = get_cutoff(used_after)
+        min_age = get_cutoff(created_before, '23:59:59')
 
         # Get groups
         url = f'groups'
@@ -137,20 +140,39 @@ class GroupMe:
         group_page = call_api(url, self.token, params=params, except_message='Unexpected error fetching groups')
         in_range = True
         num_groups = 0
+        num_skipped = 0
         while len(group_page) > 0 and in_range:
             # Loop over page
             for i, group in enumerate(group_page):
+                # Check creation date
+                if min_age:
+                    chat_creation_date = group['created_at']
+                    if chat_creation_date > min_age:
+                        # Handle output if necessary
+                        if verbose:
+                            num_skipped = num_skipped + 1
+                            if num_groups:
+                                print(f'\rFetching groups ({num_groups} retrieved, {num_skipped} skipped)...', end='')
+                            else:
+                                print(f'\rFetching groups ({num_skipped} skipped)...', end='')
+
+                        # Continue to next group
+                        continue
+
                 # Check last sent message
-                if cutoff:
+                if earliest_last_used_time:
                     last_sent_message = group['messages']['last_message_created_at']
-                    if last_sent_message < cutoff:
+                    if last_sent_message < earliest_last_used_time:
                         in_range = False
                         break
 
                 # Output progress if requested
                 if verbose:
                     num_groups = num_groups + 1
-                    print(f'\rFetching groups ({num_groups} retrieved)...', end='')
+                    if num_skipped:
+                        print(f'\rFetching groups ({num_groups} retrieved, {num_skipped} skipped)...', end='')
+                    else:
+                        print(f'\rFetching groups ({num_groups} retrieved)...', end='')
 
                 # Add to list of groups
                 groups.append(Group(group, self.token))
@@ -159,8 +181,14 @@ class GroupMe:
             params['page'] = params['page'] + 1
             group_page = call_api(url, self.token, params=params, except_message='Unexpected error fetching groups')
 
+        # Finish output
         if verbose:
-            print(f'\rFetched {num_groups} groups')
+            if num_groups and num_skipped:
+                print(f'\rFetched {num_groups} groups. {num_skipped} skipped because they were created after the specified time')
+            elif num_skipped:
+                print(f'\rNo groups found matching the specified criteria ({num_skipped} checked)')
+            else:
+                print(f'\rFetched {num_groups} groups')
 
         # Get direct messages
         url = f'chats'
@@ -173,30 +201,56 @@ class GroupMe:
         dm_page = call_api(url, self.token, params=params, except_message='Unexpected error fetching direct messages')
         in_range = True
         num_chats = 0
+        num_skipped = 0
         while len(dm_page) > 0 and in_range:
             # Loop over page
             for i, dm in enumerate(dm_page):
+                # Check creation date
+                if min_age:
+                    first_dm_date = dm['created_at']
+                    if first_dm_date > min_age:
+                        # Handle output if necessary
+                        if verbose:
+                            num_skipped = num_skipped + 1
+                            if num_chats:
+                                print(f'\rFetching direct messages ({num_chats} retrieved, {num_skipped} skipped)...', end='')
+                            else:
+                                print(f'\rFetching groups ({num_skipped} skipped)...', end='')
+
+                        # Continue to next DM
+                        continue
+
                 # Check last sent message
-                if cutoff:
+                if earliest_last_used_time:
                     last_sent_message = dm['last_message']['created_at']
-                    if last_sent_message < cutoff:
+                    if last_sent_message < earliest_last_used_time:
                         in_range = False
                         break
 
                 # Output progress if requested
                 if verbose:
                     num_chats = num_chats + 1
-                    print(f'\rFetching direct messages ({num_chats} retrieved)...', end='')
+                    if num_skipped:
+                        print(f'\rFetching direct messages ({num_chats} retrieved, {num_skipped} skipped)...', end='')
+                    else:
+                        print(f'\rFetching direct messages ({num_chats} retrieved)...', end='')
 
                 # Add to list of groups
-                direct_messages.append(DirectMessage(dm))
+                direct_messages.append(DirectMessage(dm, self.token))
 
             # Get next page
             params['page'] = params['page'] + 1
             dm_page = call_api(url, self.token, params=params, except_message='Unexpected error fetching direct messages')
 
         if verbose:
-            print(f'\rFetched {num_chats} direct messages')
+            # Finish output
+            if verbose:
+                if num_chats and num_skipped:
+                    print(f'\rFetched {num_chats} direct messages. {num_skipped} skipped because the first message was sent after the specified time')
+                elif num_skipped:
+                    print(f'\rNo direct messages found matching the specified criteria ({num_skipped} checked)')
+                else:
+                    print(f'\rFetched {num_chats} groups')
 
         # Merge lists
         group_index = 0
@@ -219,52 +273,92 @@ class GroupMe:
 
         return chats
 
-    def get_messages(self, output_file: str = '', before: str = '', after: str = '', keyword: str = '', limit: int = -1, suppress_warning: bool = False) -> List:
+    def get_messages(self, before: str = '', after: str = '', keyword: str = '', limit: int = -1, suppress_warning: bool = False, verbose: bool = False) -> List:
         """
         @brief Searches for messages meeting the given criteria
-        @param output_file      (str):  The name of a file into which to direct the output. If blank, no output is provided
-                                        if specified as "console", it will output to the console
         @param before           (str):  A date string formatted either as "MM/dd/yyyy or MM/dd/yyyy hh:mm:ss" indicating the
                                         time before which messages should have been sent
         @param after            (str):  A date string formatted either as "MM/dd/yyyy" or "MM/dd/yyyy hh:mm:ss" indicating the
                                         time after which messages should have been sent
         @param keyword          (str):  A string of text which messages should contain
-        @param suppress_warning (bool): If very few parameters are specified, and the search is expected to return a lot
-                                        of results, a prompt is displayed by default requiring the user to confirm the
+        @param limit            (int):  A limit of messages to fetch. -1 for no limit
+        @param suppress_warning (bool): If no before or after dates are specified, the search is will need to traverse many
+                                        groups and messages. A prompt is displayed by default requiring the user to confirm the
                                         search. Specifying this parameter as true bypasses this prompt, and immediately
                                         proceeds with the search
+        @param verbose          (bool): Specifies if the search process should output periodic progress updates
         @return (List) A list of the message objects returned by the search
         """
-        if before != '':
-            before = string_to_epoch(before)
-        if after != '':
-            after = string_to_epoch(after)
-        return []
+        # Prompt if large search
+        if before == '' and after == '' and not suppress_warning:
+            choice = input('You have chosen to search for messages with no date range. Depending on how much you have used GroupMe, this search could take a long time. Do you want to continue (Y/N)? ')
+            while choice.lower() != 'y' and choice.lower() != 'n':
+                choice = input('Please select "Y" or "N" to indicate if you would like to continue with the search')
+            if choice.lower() == 'y':
+                if not verbose:
+                    choice = input('Would you like to enable verbose mode so that progress of the search will be visible (Y/N)? ')
+                    while choice.lower() != 'y' and choice.lower() != 'n':
+                        choice = input('Please select "Y" or "N" to indicate if you would like to enable verbose mode')
+                    if choice.lower() == 'y':
+                        verbose = True
+            else:
+                print('Search canceled')
+                return []
+
+        chats = self.get_chats(used_after=after, created_before=before, verbose=verbose)
+
+        messages = []
+        for chat in chats:
+            messages = messages + chat.get_messages(before=before, after=after, keyword=keyword, verbose=verbose)
+
+        if limit != -1 and len(messages) > limit:
+            messages = messages[0:limit]
+
+        return messages
 
 
-def get_cutoff(last_used: str) -> int | None:
+def get_cutoff(last_used: str, add_time: str = '00:00:00') -> int | None:
+    """
+    @brief  Takes either a date or a duration, and returns a timestamp referring to the date or that duration back from the current time
+    @param  last_used (str): A string formatted either as "MM/dd/yyyy", "MM/dd/yyyy hh:mm:ss", or as a number followed by a single letter unit
+    @param  add_time  (str): A string representing a time, formatted as hh:mm:ss, which is appended to the end of a date provided without a time
+    @return (int) An integer representing a point in time
+    """
     if last_used == '':
         return None
 
     date_components = last_used.split('/')
     if len(date_components) == 1:
-        # If specified as duration
-        number = last_used[0:len(last_used) - 1]
-        unit = last_used[len(last_used) - 1]
+        # If specified as duration get last three characters if minutes, or last character otherwise
+        if last_used.endswith('min'):
+            number = last_used[0:len(last_used) - 3]
+            unit = last_used[len(last_used) - 3:]
+        else:
+            number = last_used[0:len(last_used) - 1]
+            unit = last_used[len(last_used) - 1]
+
+        # Verify that numeric portion is numeric
         try:
             number = int(number)
         except ValueError:
             raise GroupMeException('Invalid argument for argument "last_used"')
         timespan = to_seconds(number, unit)
     elif len(date_components) == 3:
-        # If specified as date
+        # If specified as date, chop off time component and then split into date components
+        date_components[2] = date_components[2].split(' ')[0]
+        time_components = date_components[2].split(' ')[1:]
+        if len(time_components) == 0:
+            time_components = add_time.split(':')
         try:
             month = int(date_components[0])
             day = int(date_components[1])
             year = int(date_components[2])
+            hour = int(time_components[0])
+            minute = int(time_components[1])
+            second = int(time_components[2])
         except ValueError:
             raise GroupMeException('Invalid argument for argument "last_used"')
-        timespan = time.time() - float(datetime(year, month, day).timestamp())
+        timespan = time.time() - float(datetime(year, month, day, hour, minute, second).timestamp())
     else:
         raise GroupMeException('Invalid argument for argument "last_used"')
     return int(time.time() - timespan)
