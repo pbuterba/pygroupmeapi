@@ -9,6 +9,7 @@
 @credit  GroupMe API info: https://dev.groupme.com/docs/v3
 """
 # Imports
+import math
 from typing import List, Dict
 
 from common_utils import call_api
@@ -64,7 +65,6 @@ class Group(Chat):
         self.last_used = epoch_to_string(self.last_used_epoch)
         self.creation_date_epoch = data['created_at']
         self.creation_date = epoch_to_string(self.creation_date_epoch)
-        self.last_message_id = data['messages']['last_message_id']
         self.token = token
 
     def owner(self) -> str:
@@ -82,7 +82,7 @@ class Group(Chat):
         """
         @brief  Gets all messages in a group matching the specified criteria (see superclass method parameter documentation)
         """
-        return page_through_messages(self.id, self.token, self.name, True, before, after, keyword, limit, self.last_message_id, verbose)
+        return page_through_messages(self.id, self.token, self.name, True, before, after, keyword, limit, verbose)
 
 
 class DirectMessage(Chat):
@@ -102,17 +102,16 @@ class DirectMessage(Chat):
         self.last_used = epoch_to_string(self.last_used_epoch)
         self.creation_date_epoch = data['created_at']
         self.creation_date = epoch_to_string(self.creation_date_epoch)
-        self.last_message_id = data['last_message']['id']
         self.token = token
 
     def get_messages(self, before: str = '', after: str = '', keyword: str = '', limit: int = -1, verbose: bool = False) -> List:
         """
         @brief  Gets all messages in a direct message matching the specified criteria (see superclass method parameter documentation)
         """
-        return page_through_messages(self.id, self.token, self.name, False, before, after, keyword, limit, self.last_message_id, verbose)
+        return page_through_messages(self.id, self.token, self.name, False, before, after, keyword, limit, verbose)
 
 
-def page_through_messages(chat_id: str, token: str, name: str, is_group: bool, before: str, after: str, keyword: str, limit: int, starting_message_id: str, verbose: bool) -> List:
+def page_through_messages(chat_id: str, token: str, name: str, is_group: bool, before: str, after: str, keyword: str, limit: int, verbose: bool) -> List:
     """
     @brief  Pages through messages in a chat and returns the messages matching the specified criteria
     @param  chat_id             (str):  The ID of the chat from which to retrieve the message data
@@ -123,7 +122,6 @@ def page_through_messages(chat_id: str, token: str, name: str, is_group: bool, b
     @param  after               (str):  The time or date at or after which all returned messages should have been sent
     @param  keyword             (str):  A string of text which all returned messages should contain
     @param  limit               (int):  The maximum number of messages to return from this group. -1 for no limit
-    @param  starting_message_id (str):  The ID of the message from which to start and search backwards
     @param  verbose             (bool): If output detailing the progress of the search should be shown
     @return (List) A list of all messages in the group matching the criteria
     """
@@ -153,9 +151,7 @@ def page_through_messages(chat_id: str, token: str, name: str, is_group: bool, b
         endpoint = 'direct_messages'
 
     # Set parameters
-    params = {
-        'before_id': starting_message_id
-    }
+    params = {}
     if is_group:
         # Calculate effective limit
         if limit == -1:
@@ -167,6 +163,7 @@ def page_through_messages(chat_id: str, token: str, name: str, is_group: bool, b
         params['other_user_id'] = chat_id
 
     message_page = call_api(endpoint, token, params=params, except_message=f'Error fetching messages from {name}')
+    total_messages = message_page['count']
     if is_group:
         message_page = message_page['messages']
     else:
@@ -176,12 +173,24 @@ def page_through_messages(chat_id: str, token: str, name: str, is_group: bool, b
             if after and message['created_at'] < after:
                 in_range = False
                 break
-            if (before and message['created_at'] > before) or (keyword and keyword not in message['text']):
+            if (before and message['created_at'] > before) or (keyword and (message['text'] is None or keyword not in message['text'])):
                 num_skipped = num_skipped + 1
             else:
                 messages.append(Message(name, is_group, message))
             if verbose:
-                print(f'\rFetching messages from {name} (searched {len(messages) + num_skipped}, selected {len(messages)})...', end='')
+                print(f'\rFetching messages from {name} (searched {len(messages) + num_skipped} of {total_messages}, selected {len(messages)})', end='')
+                if after:
+                    print('...', end='')
+                else:
+                    # Since the search will proceed all the way to the beginning of the group, output progress bar
+                    progress = (len(messages) + num_skipped)/total_messages
+                    ticks = math.floor((progress * 100)/2)
+                    print(' ', end='')
+                    for _ in range(ticks):
+                        print('=', end='')
+                    for _ in range(50 - ticks):
+                        print('-', end='')
+                    print(f' {round(progress * 100)}%', end='')
 
             # Update last message ID if last message on page
             if i == len(message_page) - 1:
@@ -196,5 +205,11 @@ def page_through_messages(chat_id: str, token: str, name: str, is_group: bool, b
             params['limit'] = effective_limit
 
         message_page = call_api(endpoint, token, params=params, except_message=f'Error fetching messages from {name}')
+        if is_group:
+            message_page = message_page['messages']
+        else:
+            message_page = message_page['direct_messages']
 
+    if verbose:
+        print(f'\rSelected {len(messages)} of {total_messages} messages from {name}')
     return messages

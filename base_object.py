@@ -250,7 +250,7 @@ class GroupMe:
                 elif num_skipped:
                     print(f'\rNo direct messages found matching the specified criteria ({num_skipped} checked)')
                 else:
-                    print(f'\rFetched {num_chats} groups')
+                    print(f'\rFetched {num_chats} direct messages')
 
         # Merge lists
         group_index = 0
@@ -313,6 +313,8 @@ class GroupMe:
 
         if limit != -1 and len(messages) > limit:
             messages = messages[0:limit]
+
+        messages.sort(key=lambda message: message.time_epoch)
 
         return messages
 
