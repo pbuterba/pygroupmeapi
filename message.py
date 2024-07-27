@@ -27,6 +27,7 @@ class Message:
         @param data     (Dict): The dictionary of data representing the message, as returned by the API
         """
         self.chat = name
+        self.id = data['id']
         self.author = data['name']
         self.time_epoch = data['created_at']
         self.time = epoch_to_string(self.time_epoch)
