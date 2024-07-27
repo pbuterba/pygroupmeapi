@@ -3,12 +3,13 @@
 @brief   General purpose utilities for the GroupMe API
 
 @date    6/1/2024
-@updated 7/23/2024
+@updated 7/27/2024
 
 @author Preston Buterbaugh
 """
 # Imports
 import json
+import math
 import requests
 from typing import List, Dict
 
@@ -42,6 +43,21 @@ def call_api(endpoint: str, token: str, params: Dict | None = None, except_messa
     if response.status_code != 200:
         raise GroupMeException(except_message)
     return json.loads(response.text)['response']
+
+
+def progress_bar(completed: int, total: int) -> str:
+    """
+    @brief  Returns a 50 tick progress bar based on a completed number of items and total number of items to complete
+    @param  completed (int): The number of items that have been completed:
+    @param  total     (int): The total number of items to be completed
+    @return (str) A 50 tick ASCII progress bar
+    """
+    progress = completed/total
+    ticks = math.floor((progress * 100)/2)
+    dashes = '-' * (50 - ticks)
+    ticks = '=' * ticks
+    percent_display = f'{round(progress * 100)}%'
+    return f' {ticks}{dashes} {percent_display}'
 
 
 class GroupMeException(Exception):
