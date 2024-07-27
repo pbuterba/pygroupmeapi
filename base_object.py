@@ -3,7 +3,7 @@
 @brief   A Python object implementation of the GroupMe API
 
 @date    6/1/2024
-@updated 7/23/2024
+@updated 7/27/2024
 
 @author  Preston Buterbaugh
 @credit  GroupMe API info: https://dev.groupme.com/docs/v3
@@ -11,13 +11,14 @@
 # Imports
 from datetime import datetime
 import json
+import math
 import requests
-from typing import List
 import time
+from typing import List
 
 from chat import Chat, Group, DirectMessage
-from common_utils import BASE_URL, TOKEN_POSTFIX, call_api, GroupMeException
-from time_functions import to_seconds, string_to_epoch
+from common_utils import BASE_URL, TOKEN_POSTFIX, call_api, progress_bar, GroupMeException
+from time_functions import to_seconds
 
 
 class GroupMe:
@@ -83,7 +84,7 @@ class GroupMe:
             # Loop over page
             for dm in dm_page:
                 if dm['other_user']['name'] == user_name:
-                    return DirectMessage(dm)
+                    return DirectMessage(dm, self.token)
 
             # Get next page
             params['page'] = params['page'] + 1
@@ -273,7 +274,7 @@ class GroupMe:
 
         return chats
 
-    def get_messages(self, sent_before: str = '', sent_after: str = '', keyword: str = '', limit: int = -1, suppress_warning: bool = False, verbose: bool = False) -> List:
+    def get_messages(self, sent_before: str = '', sent_after: str = '', keyword: str = '', before: int = 0, after: int = 0, limit: int = -1, suppress_warning: bool = False, verbose: bool = False) -> List:
         """
         @brief Searches for messages meeting the given criteria
         @param sent_before      (str):  A date string formatted either as "MM/dd/yyyy or MM/dd/yyyy hh:mm:ss" indicating the
@@ -281,6 +282,8 @@ class GroupMe:
         @param sent_after       (str):  A date string formatted either as "MM/dd/yyyy" or "MM/dd/yyyy hh:mm:ss" indicating the
                                         time after which messages should have been sent
         @param keyword          (str):  A string of text which messages should contain
+        @param before           (int):  The number of messages before each selected message to include in the returned set
+        @param after            (int):  The number of messages after each selected message to include in the returned set
         @param limit            (int):  A limit of messages to fetch. -1 for no limit
         @param suppress_warning (bool): If no before or after dates are specified, the search is will need to traverse many
                                         groups and messages. A prompt is displayed by default requiring the user to confirm the
@@ -305,16 +308,51 @@ class GroupMe:
                 print('Search canceled')
                 return []
 
+        start = time.time()
+
         chats = self.get_chats(used_after=sent_after, created_before=sent_before, verbose=verbose)
 
         messages = []
         for chat in chats:
-            messages = messages + chat.get_messages(sent_before=sent_before, sent_after=sent_after, keyword=keyword, verbose=verbose)
+            messages = messages + chat.get_messages(sent_before=sent_before, sent_after=sent_after, keyword=keyword, before=before, after=after, verbose=verbose)
 
+        # Clean up result set
         if limit != -1 and len(messages) > limit:
             messages = messages[0:limit]
 
         messages.sort(key=lambda message: message.time_epoch)
+
+        if before or after:
+            if verbose:
+                print('Pruning result set to remove duplicate messages...', end='')
+            message_ids = []
+            messages_to_remove = []
+            for i, message in enumerate(messages):
+                if message.id in message_ids:
+                    messages_to_remove.append(message)
+                else:
+                    message_ids.append(message.id)
+                if verbose:
+                    print(f'\rPruning result set to remove duplicate messages {progress_bar(i, len(messages))}', end='')
+
+            for message in messages_to_remove:
+                messages.remove(message)
+            if verbose:
+                print('\rSuccessfully removed any duplicates from the result set')
+
+        end = time.time()
+        if verbose:
+            seconds = end - start
+            hours = math.floor(seconds/3600)
+            seconds = seconds - (hours * 3600)
+            minutes = math.floor(seconds/60)
+            seconds = seconds - (minutes * 60)
+            print('Total time: ', end='')
+            if hours:
+                print(f'{hours} hr ', end='')
+            if hours or minutes:
+                print(f'{minutes} min ', end='')
+            print(f'{seconds} sec')
 
         return messages
 
