@@ -293,7 +293,7 @@ class GroupMe:
         @return (List) A list of the message objects returned by the search
         """
         # Prompt if large search
-        if sent_before == '' and sent_after == '' and not suppress_warning:
+        if sent_after == '' and not suppress_warning:
             choice = input('You have chosen to search for messages with no date range. Depending on how much you have used GroupMe, this search could take a long time. Do you want to continue (Y/N)? ')
             while choice.lower() != 'y' and choice.lower() != 'n':
                 choice = input('Please select "Y" or "N" to indicate if you would like to continue with the search')
@@ -317,9 +317,6 @@ class GroupMe:
             messages = messages + chat.get_messages(sent_before=sent_before, sent_after=sent_after, keyword=keyword, before=before, after=after, verbose=verbose)
 
         # Clean up result set
-        if limit != -1 and len(messages) > limit:
-            messages = messages[0:limit]
-
         messages.sort(key=lambda message: message.time_epoch)
 
         if before or after:
@@ -339,6 +336,9 @@ class GroupMe:
                 messages.remove(message)
             if verbose:
                 print('\rSuccessfully removed any duplicates from the result set')
+
+        if limit != -1 and len(messages) > limit:
+            messages = messages[0:limit]
 
         end = time.time()
         if verbose:
