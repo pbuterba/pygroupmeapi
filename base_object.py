@@ -273,12 +273,12 @@ class GroupMe:
 
         return chats
 
-    def get_messages(self, before: str = '', after: str = '', keyword: str = '', limit: int = -1, suppress_warning: bool = False, verbose: bool = False) -> List:
+    def get_messages(self, sent_before: str = '', sent_after: str = '', keyword: str = '', limit: int = -1, suppress_warning: bool = False, verbose: bool = False) -> List:
         """
         @brief Searches for messages meeting the given criteria
-        @param before           (str):  A date string formatted either as "MM/dd/yyyy or MM/dd/yyyy hh:mm:ss" indicating the
+        @param sent_before      (str):  A date string formatted either as "MM/dd/yyyy or MM/dd/yyyy hh:mm:ss" indicating the
                                         time before which messages should have been sent
-        @param after            (str):  A date string formatted either as "MM/dd/yyyy" or "MM/dd/yyyy hh:mm:ss" indicating the
+        @param sent_after       (str):  A date string formatted either as "MM/dd/yyyy" or "MM/dd/yyyy hh:mm:ss" indicating the
                                         time after which messages should have been sent
         @param keyword          (str):  A string of text which messages should contain
         @param limit            (int):  A limit of messages to fetch. -1 for no limit
@@ -290,7 +290,7 @@ class GroupMe:
         @return (List) A list of the message objects returned by the search
         """
         # Prompt if large search
-        if before == '' and after == '' and not suppress_warning:
+        if sent_before == '' and sent_after == '' and not suppress_warning:
             choice = input('You have chosen to search for messages with no date range. Depending on how much you have used GroupMe, this search could take a long time. Do you want to continue (Y/N)? ')
             while choice.lower() != 'y' and choice.lower() != 'n':
                 choice = input('Please select "Y" or "N" to indicate if you would like to continue with the search')
@@ -305,11 +305,11 @@ class GroupMe:
                 print('Search canceled')
                 return []
 
-        chats = self.get_chats(used_after=after, created_before=before, verbose=verbose)
+        chats = self.get_chats(used_after=sent_after, created_before=sent_before, verbose=verbose)
 
         messages = []
         for chat in chats:
-            messages = messages + chat.get_messages(before=before, after=after, keyword=keyword, verbose=verbose)
+            messages = messages + chat.get_messages(sent_before=sent_before, sent_after=sent_after, keyword=keyword, verbose=verbose)
 
         if limit != -1 and len(messages) > limit:
             messages = messages[0:limit]

@@ -14,7 +14,7 @@ from typing import List, Dict
 
 from common_utils import call_api
 from message import Message
-from time_functions import string_to_epoch, epoch_to_string
+from time_functions import string_to_epoch, epoch_to_string, epoch_to_month_year
 
 
 class Chat:
@@ -34,14 +34,14 @@ class Chat:
         self.creation_date = None
         self.token = None
 
-    def get_messages(self, before: str = '', after: str = '', keyword: str = '', limit: int = -1, verbose: bool = False) -> List:
+    def get_messages(self, sent_before: str = '', sent_after: str = '', keyword: str = '', limit: int = -1, verbose: bool = False) -> List:
         """
         @brief  Gets all messages in a chat matching the specified criteria
-        @param  before  (int): The time prior to which all messages returned should have been sent
-        @param  after   (int): The time at or after which all messages returned should have been sent
-        @param  keyword (str): A string of text which all messages returned should contain
-        @param  limit   (int): The maximum number of messages to return. -1 returns all matching messages
-        @param  verbose (bool): If output should be displayed indicating progress made in the query
+        @param  sent_before  (int):  The time prior to which all messages returned should have been sent
+        @param  sent_after   (int):  The time at or after which all messages returned should have been sent
+        @param  keyword      (str):  A string of text which all messages returned should contain
+        @param  limit        (int):  The maximum number of messages to return. -1 returns all matching messages
+        @param  verbose      (bool): If output should be displayed indicating progress made in the query
         @return (List) A list of Message objects
         """
         raise NotImplementedError('Cannot call abstract method')
@@ -78,11 +78,11 @@ class Group(Chat):
         group_data = call_api(f'groups/{self.id}', self.token)
         return [user['nickname'] for user in group_data]
 
-    def get_messages(self, before: str = '', after: str = '', keyword: str = '', limit: int = -1, verbose: bool = False) -> List:
+    def get_messages(self, sent_before: str = '', sent_after: str = '', keyword: str = '', limit: int = -1, verbose: bool = False) -> List:
         """
         @brief  Gets all messages in a group matching the specified criteria (see superclass method parameter documentation)
         """
-        return page_through_messages(self.id, self.token, self.name, True, before, after, keyword, limit, verbose)
+        return page_through_messages(self.id, self.token, self.name, True, sent_before, sent_after, keyword, limit, verbose)
 
 
 class DirectMessage(Chat):
@@ -104,11 +104,11 @@ class DirectMessage(Chat):
         self.creation_date = epoch_to_string(self.creation_date_epoch)
         self.token = token
 
-    def get_messages(self, before: str = '', after: str = '', keyword: str = '', limit: int = -1, verbose: bool = False) -> List:
+    def get_messages(self, sent_before: str = '', sent_after: str = '', keyword: str = '', limit: int = -1, verbose: bool = False) -> List:
         """
         @brief  Gets all messages in a direct message matching the specified criteria (see superclass method parameter documentation)
         """
-        return page_through_messages(self.id, self.token, self.name, False, before, after, keyword, limit, verbose)
+        return page_through_messages(self.id, self.token, self.name, False, sent_before, sent_after, keyword, limit, verbose)
 
 
 def page_through_messages(chat_id: str, token: str, name: str, is_group: bool, before: str, after: str, keyword: str, limit: int, verbose: bool) -> List:
@@ -180,7 +180,7 @@ def page_through_messages(chat_id: str, token: str, name: str, is_group: bool, b
             if verbose:
                 print(f'\rFetching messages from {name} (searched {len(messages) + num_skipped} of {total_messages}, selected {len(messages)})', end='')
                 if after:
-                    print('...', end='')
+                    print(f'... (Reached {epoch_to_month_year(message["created_at"])})', end='')
                 else:
                     # Since the search will proceed all the way to the beginning of the group, output progress bar
                     progress = (len(messages) + num_skipped)/total_messages

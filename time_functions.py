@@ -124,3 +124,45 @@ def epoch_to_string(epoch: int) -> str:
     """
     time_obj = time.localtime(epoch)
     return f'{time_obj.tm_mon}/{time_obj.tm_mday}/{time_obj.tm_year} {to_twelve_hour_time(time_obj.tm_hour, time_obj.tm_min, time_obj.tm_sec)}'
+
+
+def epoch_to_month_year(epoch: int) -> str:
+    """
+    @brief  Converts a point in time expressed as seconds from epoch to a string formatted as MMMMM yyyy
+    @param  epoch (int): A point in time specified in seconds from epoch
+    @return (str) A string representation of the point in time
+    """
+    time_obj = time.localtime(epoch)
+    return f'{month_name(time_obj.tm_mon)} {time_obj.tm_year}'
+
+
+def month_name(month_num: int) -> str:
+    """
+    @brief  Gets the name of a month from its number
+    @param  month_num (int): A month represented as a number (1-12)
+    @return (str) The name of the month
+    """
+    if month_num == 1:
+        return 'January'
+    elif month_num == 2:
+        return 'February'
+    elif month_num == 3:
+        return 'March'
+    elif month_num == 4:
+        return 'April'
+    elif month_num == 5:
+        return 'May'
+    elif month_num == 6:
+        return 'June'
+    elif month_num == 7:
+        return 'July'
+    elif month_num == 8:
+        return 'August'
+    elif month_num == 9:
+        return 'September'
+    elif month_num == 10:
+        return 'October'
+    elif month_num == 11:
+        return 'November'
+    elif month_num == 12:
+        return 'December'
