@@ -11,7 +11,7 @@
 from datetime import datetime
 import time
 
-from common_utils import GroupMeException
+from groupme.common_utils import GroupMeException
 
 
 def to_seconds(number: int, units: str) -> int:

@@ -11,9 +11,9 @@
 # Imports
 from typing import List, Dict
 
-from common_utils import call_api, progress_bar
-from message import Message
-from time_functions import string_to_epoch, epoch_to_string, epoch_to_month_year
+from groupme.common_utils import call_api, progress_bar
+from groupme.message import Message
+from groupme.time_functions import string_to_epoch, epoch_to_string, epoch_to_month_year
 
 
 class Chat:
