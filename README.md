@@ -28,8 +28,7 @@ All the functionality of the API should be accessible through the base `GroupMe`
 from groupme import GroupMe
 ```
 The GroupMe object will return values of other object types that are defined in this project, so you may wish to import thsese as well if using Python type hinting. Other classes
-available are [`Group`](docs/group.md), [`DirectMessage`](docs/direct_message.md), `Chat` (a superclass that
-includes both `Group` and `DirectMessage`), and [`Message`](docs/message.md). See the [individual APIs](docs)
+available are [`Group`](docs/group.md), [`DirectMessage`](docs/direct_message.md), `Chat` (a superclass that includes both `Group` and `DirectMessage`), and [`Message`](docs/message.md). See the [individual APIs](docs)
 for each of these objects for more information on their attributes and methods.
 
 ### The GroupMe Object
@@ -40,6 +39,7 @@ on the user's chats and messages.
 ```
 user = GroupMe(token)
 ```
+**Parameters:**
 `token` is a string representing the GroupMe API token of the user whose account information will be fetched. See [Setup](#setup) for more information on this.
 
 #### Fields
@@ -86,10 +86,10 @@ parameter is specified, only messages sent AT or BEFORE the specified time will 
 + `sent_after` - *Optional*. A string representing a date and time, formatted either as "MM/dd/yyyy" or "MM/dd/yyyy hh:mm:ss". If the former, a time of 00:00:00 is assumed. If this
 parameter is specified, only messages sent sent AT or AFTER the specified time will be returned.
 + `keyword` - *Optional*. A string of text. If specified, only messages containing this string of text will be returned.
-+ `before` - *Optional*. An integer representing the number of messages appearing in a group chonologically immediately BEFORE each message matching the search criteria, that should 
++ `before` - *Optional*. An integer representing the number of messages appearing in a chat chonologically immediately BEFORE each message matching the search criteria, that should 
 be returned, even if these messages do not match the search criteria. Most effective when paired with the `keyword` parameter, to fetch the context immediately proceeding a message
 containing the keyword text.
-+ `after` - *Optional*. An integer representing the number of messages appearing in a group chonologically immediately AFTER each message matching the search criteria, that should 
++ `after` - *Optional*. An integer representing the number of messages appearing in a chat chonologically immediately AFTER each message matching the search criteria, that should 
 be returned, even if these messages do not match the search criteria. Most effective when paired with the `keyword` parameter, to fetch the context immediately following a message
 containing the keyword text.
 + `limit` - *Optional*.  An integer representing the maximum number of messages to be returned by the function. Defaults to -1 which is interpreted as no limit. If more messages would
@@ -103,3 +103,4 @@ of messages. Since these will take a long time to complete, verbose output will 
 
 ## Changelog
 + v1.0.0 - July 27th, 2024
+++ Initial release
