@@ -3,7 +3,7 @@
 @brief   Helper functions to manipulate time objects
 
 @date    6/1/2024
-@updated 7/20/2024
+@updated 7/27/2024
 
 @author Preston Buterbaugh
 """

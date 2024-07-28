@@ -100,3 +100,6 @@ another prompt will appear asking if the user would like to enable verbose mode,
 from appearing, allowing the program to run without interruption.
 + `verbose` - *Optional*. Boolean flag that defaults to false. If set to true, console output will update the user on the progress of the search. Useful for searches for large numbers
 of messages. Since these will take a long time to complete, verbose output will assure the user that the process is still moving.
+
+## Changelog
++ v1.0.0 - July 27th, 2024
