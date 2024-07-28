@@ -21,3 +21,16 @@ SMS or email to verify your identity. Once you are successfully logged in, selec
 your account name), and you will be presented with a pop-up containing a long string of characters. Copy these, and save
 them somewhere secure. This is your token which grants you access to the GroupMe API. Tokens allow you to sign in to a web service,
 fulfilling the role of a combined username and password. As such, they should be treated with the same security level as passwords.
+
+## Usage
+All the functionality of the API should be accessible through the base [`GroupMe`](docs/base_object.md) object, which can be imported to a file with the following line of code:
+```
+from groupme import GroupMe
+```
+The `GroupMe` object will return values of other object types that are defined in this project, so you may wish to import thsese as well if using Python type hinting. Other classes
+available are [`Group`](docs/group.md), [`DirectMessage`](docs/direct_message.md), `Chat` (a superclass that includes both `Group` and `DirectMessage`), and [`Message`](docs/message.md).
+See the [individual APIs](docs) for each object to see more information on their attributes and methods.
+
+## Changelog
++ v1.0.0 - July 27th, 2024
+  + Initial release
