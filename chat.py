@@ -31,6 +31,7 @@ class Chat:
         self.last_used = None
         self.creation_date_epoch = None
         self.creation_date = None
+        self.image_url = None
         self.token = None
 
     def get_messages(self, sent_before: str = '', sent_after: str = '', keyword: str = '', limit: int = -1, verbose: bool = False) -> List:
@@ -64,6 +65,7 @@ class Group(Chat):
         self.last_used = epoch_to_string(self.last_used_epoch)
         self.creation_date_epoch = data['created_at']
         self.creation_date = epoch_to_string(self.creation_date_epoch)
+        self.image_url = data['image_url']
         self.token = token
 
     def owner(self) -> str:
@@ -101,6 +103,7 @@ class DirectMessage(Chat):
         self.last_used = epoch_to_string(self.last_used_epoch)
         self.creation_date_epoch = data['created_at']
         self.creation_date = epoch_to_string(self.creation_date_epoch)
+        self.image_url = data['other_user']['avatar_url']
         self.token = token
 
     def get_messages(self, sent_before: str = '', sent_after: str = '', keyword: str = '', before: int = 0, after: int = 0, limit: int = -1, verbose: bool = False) -> List:
@@ -138,7 +141,7 @@ def page_through_messages(chat_id: str, token: str, name: str, is_group: bool, s
     if sent_after:
         if len(sent_after.split(' ')) == 1:
             sent_after = f'{sent_after} 00:00:00'
-        after = string_to_epoch(sent_after)
+        sent_after = string_to_epoch(sent_after)
 
     # Variables for tracking progress
     messages = []

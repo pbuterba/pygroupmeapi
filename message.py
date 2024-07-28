@@ -3,7 +3,7 @@
 @brief      Class representing a GroupMe message object
 
 @date       7/23/2024
-@updated    7/23/2024
+@updated    7/27/2024
 
 @author     Preston Buterbaugh
 @credit     GroupMe API info: https://dev.groupme.com/docs/v3
@@ -29,6 +29,7 @@ class Message:
         self.chat = name
         self.id = data['id']
         self.author = data['name']
+        self.profile_picture_url = data['avatar_url']
         self.time_epoch = data['created_at']
         self.time = epoch_to_string(self.time_epoch)
         self.text = data['text']
