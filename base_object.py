@@ -352,7 +352,7 @@ class GroupMe:
                 print(f'{hours} hr ', end='')
             if hours or minutes:
                 print(f'{minutes} min ', end='')
-            print(f'{seconds} sec')
+            print(f'{round(seconds)} sec')
 
         return messages
 
