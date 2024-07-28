@@ -69,6 +69,10 @@ class Group(Chat):
         self.token = token
 
     def owner(self) -> str:
+        """
+        @brief  Gets the owner of the group
+        @return (str) The name of the group owner
+        """
         group_data = call_api(f'groups/{self.id}', self.token)
         for user in group_data['members']:
             if 'owner' in user['roles']:
@@ -76,6 +80,10 @@ class Group(Chat):
         return 'Unknown'
 
     def members(self) -> List:
+        """
+        @brief  Gets the members of the group
+        @return (List) A list containing the names of each member of the group
+        """
         group_data = call_api(f'groups/{self.id}', self.token)
         return [user['nickname'] for user in group_data]
 
@@ -178,7 +186,7 @@ def page_through_messages(chat_id: str, token: str, name: str, is_group: bool, s
     get_next = 0
 
     # Loop over message pages until no more, or the time bound is reached
-    while len(message_page) > 0 and in_range:
+    while len(message_page) > 0 and in_range and len(messages) < limit:
         for i, message in enumerate(message_page):
             if get_next:
                 messages.append(Message(name, is_group, message))
@@ -200,6 +208,10 @@ def page_through_messages(chat_id: str, token: str, name: str, is_group: bool, s
                 else:
                     # Since the search will proceed all the way to the beginning of the group, output progress bar
                     print(progress_bar(len(messages) + num_skipped, total_messages), end='')
+
+            # Check if limit reached
+            if len(messages) == limit:
+                break
 
             # Update last message ID if last message on page
             if i == len(message_page) - 1:
