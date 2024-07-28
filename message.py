@@ -3,7 +3,7 @@
 @brief      Class representing a GroupMe message object
 
 @date       7/23/2024
-@updated    7/27/2024
+@updated    7/28/2024
 
 @author     Preston Buterbaugh
 @credit     GroupMe API info: https://dev.groupme.com/docs/v3
@@ -11,7 +11,7 @@
 # Imports
 from typing import Dict
 
-from time_functions import epoch_to_string
+from groupme.time_functions import epoch_to_string
 
 
 class Message:
