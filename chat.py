@@ -164,14 +164,7 @@ def page_through_messages(chat_id: str, token: str, name: str, is_group: bool, s
 
     # Set parameters
     params = {}
-    if is_group:
-        # Calculate effective limit
-        if limit == -1:
-            effective_limit = 100
-        else:
-            effective_limit = min(limit - len(messages), 100)
-        params['limit'] = effective_limit
-    else:
+    if not is_group:
         params['other_user_id'] = chat_id
 
     # Process message page
@@ -186,7 +179,7 @@ def page_through_messages(chat_id: str, token: str, name: str, is_group: bool, s
     get_next = 0
 
     # Loop over message pages until no more, or the time bound is reached
-    while len(message_page) > 0 and in_range and len(messages) < limit:
+    while len(message_page) > 0 and in_range and (limit == -1 or len(messages) < limit):
         for i, message in enumerate(message_page):
             if get_next:
                 messages.append(Message(name, is_group, message))
@@ -210,20 +203,12 @@ def page_through_messages(chat_id: str, token: str, name: str, is_group: bool, s
                     print(progress_bar(len(messages) + num_skipped, total_messages), end='')
 
             # Check if limit reached
-            if len(messages) == limit:
+            if limit > -1 and len(messages) == limit:
                 break
 
             # Update last message ID if last message on page
             if i == len(message_page) - 1:
                 params['before_id'] = message['id']
-
-        # Calculate new effective limit
-        if is_group:
-            if limit == -1:
-                effective_limit = 100
-            else:
-                effective_limit = min(limit - len(messages), 100)
-            params['limit'] = effective_limit
 
         message_page = call_api(endpoint, token, params=params, except_message=f'Error fetching messages from {name}')
         if is_group:
@@ -233,6 +218,8 @@ def page_through_messages(chat_id: str, token: str, name: str, is_group: bool, s
 
     if verbose:
         print(f'\rSelected {len(messages)} of {total_messages} messages from {name}')
+
+    messages.sort(key=lambda message: message.time_epoch)
     return messages
 
 
