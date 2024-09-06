@@ -3,7 +3,7 @@
 @brief   Classes to represent different kinds of GroupMe chats
 
 @date    6/1/2024
-@updated 7/27/2024
+@updated 9/5/2024
 
 @author Preston Buterbaugh
 @credit  GroupMe API info: https://dev.groupme.com/docs/v3
@@ -34,12 +34,14 @@ class Chat:
         self.image_url = None
         self.token = None
 
-    def get_messages(self, sent_before: str = '', sent_after: str = '', keyword: str = '', limit: int = -1, verbose: bool = False) -> List:
+    def get_messages(self, sent_before: str = '', sent_after: str = '', keyword: str = '', before: int = 0, after: int = 0, limit: int = -1, verbose: bool = False) -> List:
         """
         @brief  Gets all messages in a chat matching the specified criteria
         @param  sent_before  (int):  The time prior to which all messages returned should have been sent
         @param  sent_after   (int):  The time at or after which all messages returned should have been sent
         @param  keyword      (str):  A string of text which all messages returned should contain
+        @param  before       (int):  The number of messages to fetch before each message matching the search criteria
+        @param  after        (int):  The number of messages to fetch after each message matching the search criteria
         @param  limit        (int):  The maximum number of messages to return. -1 returns all matching messages
         @param  verbose      (bool): If output should be displayed indicating progress made in the query
         @return (List) A list of Message objects
