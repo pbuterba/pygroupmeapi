@@ -3,7 +3,7 @@
 @brief   Classes to represent different kinds of GroupMe chats
 
 @date    6/1/2024
-@updated 7/27/2024
+@updated 9/5/2024
 
 @author Preston Buterbaugh
 @credit  GroupMe API info: https://dev.groupme.com/docs/v3
@@ -34,12 +34,14 @@ class Chat:
         self.image_url = None
         self.token = None
 
-    def get_messages(self, sent_before: str = '', sent_after: str = '', keyword: str = '', limit: int = -1, verbose: bool = False) -> List:
+    def get_messages(self, sent_before: str = '', sent_after: str = '', keyword: str = '', before: int = 0, after: int = 0, limit: int = -1, verbose: bool = False) -> List:
         """
         @brief  Gets all messages in a chat matching the specified criteria
         @param  sent_before  (int):  The time prior to which all messages returned should have been sent
         @param  sent_after   (int):  The time at or after which all messages returned should have been sent
         @param  keyword      (str):  A string of text which all messages returned should contain
+        @param  before       (int):  The number of messages to fetch before each message matching the search criteria
+        @param  after        (int):  The number of messages to fetch after each message matching the search criteria
         @param  limit        (int):  The maximum number of messages to return. -1 returns all matching messages
         @param  verbose      (bool): If output should be displayed indicating progress made in the query
         @return (List) A list of Message objects
@@ -164,7 +166,12 @@ def page_through_messages(chat_id: str, token: str, name: str, is_group: bool, s
 
     # Set parameters
     params = {}
-    if not is_group:
+    if is_group:
+        if limit == -1:
+            params['limit'] = 100
+        else:
+            params['limit'] = min(limit, 100)
+    else:
         params['other_user_id'] = chat_id
 
     # Process message page
@@ -205,6 +212,13 @@ def page_through_messages(chat_id: str, token: str, name: str, is_group: bool, s
             # Check if limit reached
             if limit > -1 and len(messages) == limit:
                 break
+
+            # Update limit
+            if is_group:
+                if limit == -1:
+                    params['limit'] = 100
+                else:
+                    params['limit'] = min(limit - len(messages), 100)
 
             # Update last message ID if last message on page
             if i == len(message_page) - 1:

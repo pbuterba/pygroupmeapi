@@ -32,6 +32,9 @@ available are [`Group`](docs/group.md), [`DirectMessage`](docs/direct_message.md
 See the [individual APIs](docs) for each object to see more information on their attributes and methods.
 
 ## Changelog
++ v1.0.2 - September 5th, 2024
+  + Fixed bug where Chat abstract class did not recognize "before" and "after" parameters in get_messages() function
+  + Fixed bug which only allowed group searches to fetch messages 20 at a time (GroupMe hardcoded limit for direct messages), rather than 100 at a time (GroupMe hardcoded limit for groups)
 + v1.0.1 - July 28th, 2024
   + Fixed module import error that prevented the package from being used
 + v1.0.0 - July 27th, 2024
