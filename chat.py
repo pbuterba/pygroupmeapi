@@ -166,7 +166,12 @@ def page_through_messages(chat_id: str, token: str, name: str, is_group: bool, s
 
     # Set parameters
     params = {}
-    if not is_group:
+    if is_group:
+        if limit == -1:
+            params['limit'] = 100
+        else:
+            params['limit'] = min(limit, 100)
+    else:
         params['other_user_id'] = chat_id
 
     # Process message page
@@ -207,6 +212,13 @@ def page_through_messages(chat_id: str, token: str, name: str, is_group: bool, s
             # Check if limit reached
             if limit > -1 and len(messages) == limit:
                 break
+
+            # Update limit
+            if is_group:
+                if limit == -1:
+                    params['limit'] = 100
+                else:
+                    params['limit'] = min(limit - len(messages), 100)
 
             # Update last message ID if last message on page
             if i == len(message_page) - 1:
