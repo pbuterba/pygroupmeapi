@@ -3,7 +3,7 @@
 @brief   General purpose utilities for the GroupMe API
 
 @date    6/1/2024
-@updated 7/27/2024
+@updated 12/20/2024
 
 @author Preston Buterbaugh
 """
@@ -11,6 +11,7 @@
 import json
 import math
 import requests
+import time
 from typing import List, Dict
 
 # Global variables
@@ -35,13 +36,17 @@ def call_api(endpoint: str, token: str, params: Dict | None = None, except_messa
 
     # Make API call
     response = requests.get(f'{BASE_URL}{endpoint}{TOKEN_POSTFIX}{token}', params=params)
+    while response.status_code == 429:
+        print('WARNING! Request blocked due to high request frequency. Waiting 1 second and retrying...')
+        time.sleep(1)
+        response = requests.get(f'{BASE_URL}{endpoint}{TOKEN_POSTFIX}{token}', params=params)
     if response.status_code == 304:
         if endpoint.startswith('groups'):
             return {'messages': []}
         elif endpoint == 'direct_messages':
             return {'direct_messages': []}
     if response.status_code != 200:
-        raise GroupMeException(except_message)
+        raise GroupMeException(f'{except_message}. GroupMe API Error Code: {response.status_code}')
     return json.loads(response.text)['response']
 
 
