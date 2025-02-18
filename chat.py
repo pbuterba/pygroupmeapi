@@ -3,7 +3,7 @@
 @brief   Classes to represent different kinds of GroupMe chats
 
 @date    6/1/2024
-@updated 9/5/2024
+@updated 2/18/2025
 
 @author Preston Buterbaugh
 @credit  GroupMe API info: https://dev.groupme.com/docs/v3
@@ -189,7 +189,7 @@ def page_through_messages(chat_id: str, token: str, name: str, is_group: bool, s
     while len(message_page) > 0 and in_range and (limit == -1 or len(messages) < limit):
         for i, message in enumerate(message_page):
             if get_next:
-                messages.append(Message(name, is_group, message))
+                messages.append(Message(name, is_group, message, token))
                 get_next = get_next - 1
             if sent_after and message['created_at'] < sent_after:
                 in_range = False
@@ -197,7 +197,7 @@ def page_through_messages(chat_id: str, token: str, name: str, is_group: bool, s
             if (sent_before and message['created_at'] > sent_before) or (keyword and (message['text'] is None or keyword not in message['text'])):
                 num_skipped = num_skipped + 1
             else:
-                messages.append(Message(name, is_group, message))
+                messages.append(Message(name, is_group, message, token))
                 get_next = before
                 if after:
                     messages = messages + get_messages_after(chat_id, name, message['id'], after, token, is_group)
@@ -269,4 +269,4 @@ def get_messages_after(chat_id: str, chat_name: str, message_id: str, num_messag
     else:
         messages = message_page['direct_messages'][0:min(20, num_messages)]
 
-    return [Message(chat_name, is_group, message) for message in messages]
+    return [Message(chat_name, is_group, message, token) for message in messages]
