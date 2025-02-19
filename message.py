@@ -9,6 +9,7 @@
 @credit     GroupMe API info: https://dev.groupme.com/docs/v3
 """
 # Imports
+from __future__ import annotations
 from typing import Dict
 
 from groupme.common_utils import call_api
@@ -48,3 +49,64 @@ class Message:
                     self.emoji_mappings = {attachment['placeholder']: attachment['charmap']}
                 elif attachment['type'] == 'reply':
                     self.reply_message_id = attachment['reply_id']
+
+    def replied_message(self) -> Message | None:
+        """
+        @brief  Returns the message that the current message is a reply to, or None if it is not a reply
+        @return
+            - (Message) The message being replied to
+            - (None)    If the message is not a reply
+        """
+        if self.reply_message_id is not None:
+            # Get chat in which message was sent
+            chat_id = None
+            if self.is_group:
+                groups = call_api('groups', self.token)
+                for group in groups:
+                    if group['name'] == self.chat:
+                        chat_id = group['id']
+                        break
+            else:
+                dms = call_api('chats', self.token)
+                for dm in dms:
+                    if dm['other_user']['name'] == self.chat:
+                        chat_id = dm['other_user']['id']
+                        break
+
+            # Get first page of messages
+            chat_name = self.chat
+            last_id = self.id
+            if self.is_group:
+                params = {
+                    'before_id': last_id,
+                    'limit': 100
+                }
+                message_page = call_api(f'groups/{chat_id}/messages', self.token, params=params, except_message='Error fetching reply information')['messages']
+            else:
+                params = {
+                    'other_user': chat_id,
+                    'before_id': last_id
+                }
+                message_page = call_api('direct_messages', self.token, params=params, except_message='Error fetching reply information')['direct_messages']
+
+            # Loop until reply is found
+            while len(message_page) > 0:
+                for message in message_page:
+                    if message['id'] == self.reply_message_id:
+                        return Message(chat_name, self.is_group, message, self.token)
+                    last_id = message['id']
+
+                if self.is_group:
+                    params = {
+                        'before_id': last_id,
+                        'limit': 100
+                    }
+                    message_page = call_api(f'groups/{chat_id}/messages', self.token, params=params, except_message='Error fetching reply information')['messages']
+                else:
+                    params = {
+                        'other_user': chat_id,
+                        'before_id': last_id
+                    }
+                    message_page = call_api(f'direct_messages', self.token, params=params, except_message='Error fetching reply information')['direct_messages']
+
+        return None
