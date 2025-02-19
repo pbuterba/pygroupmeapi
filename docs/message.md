@@ -14,3 +14,12 @@ The following fields are available to access on objects of the Message class
 + `img_urls` - A list of strings containing the URLs for all images included in the message
 + `emoji_mappings` - A dictionary mapping the emoji placeholder character for the message, to the charmap entries for the emojis. See the [GroupMe Docs](https://dev.groupme.com/docs/v3)
 and the [GroupMe emoji docs](https://github.com/groupme-js/GroupMeCommunityDocs/blob/master/emoji.md) for more info
++ reply_message_id - A string containing the id of the message to which the given message is a reply to. If the message is not a reply, this field has the value `None`
+
+## Methods
+The following methods may be called on objects of the Message class:
+```
+replied_message()
+```
+Returns a `Message` object corresponding to the message to which the current message is a reply. Returns `None` if the current message is not a reply, or if the message being replied
+to could not be found.
