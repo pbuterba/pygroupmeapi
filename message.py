@@ -13,6 +13,7 @@ from __future__ import annotations
 from typing import Dict
 
 from groupme.common_utils import call_api
+from groupme.emoji_utils import get_emoji_mappings
 from groupme.time_functions import epoch_to_string
 
 
@@ -46,7 +47,7 @@ class Message:
                 if attachment['type'] == 'image':
                     self.image_urls.append(attachment['url'])
                 elif attachment['type'] == 'emoji':
-                    self.emoji_mappings = {attachment['placeholder']: attachment['charmap']}
+                    self.emoji_mappings = {attachment['placeholder']: get_emoji_mappings(attachment['charmap'])}
                 elif attachment['type'] == 'reply':
                     self.reply_message_id = attachment['reply_id']
 
