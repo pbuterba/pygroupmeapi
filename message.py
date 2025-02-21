@@ -3,17 +3,17 @@
 @brief      Class representing a GroupMe message object
 
 @date       7/23/2024
-@updated    2/18/2025
+@updated    2/20/2025
 
 @author     Preston Buterbaugh
 @credit     GroupMe API info: https://dev.groupme.com/docs/v3
 """
 # Imports
 from __future__ import annotations
-from typing import Dict
+from typing import List, Dict
 
 from groupme.common_utils import call_api
-from groupme.emoji_utils import get_emoji_mappings
+from groupme.emoji_utils import get_emoji_links
 from groupme.time_functions import epoch_to_string
 
 
@@ -47,7 +47,8 @@ class Message:
                 if attachment['type'] == 'image':
                     self.image_urls.append(attachment['url'])
                 elif attachment['type'] == 'emoji':
-                    self.emoji_mappings = {attachment['placeholder']: get_emoji_mappings(attachment['charmap'])}
+                    self.emoji_mappings = attachment['charmap']
+                    self.emoji_replacement_char = attachment['placeholder']
                 elif attachment['type'] == 'reply':
                     self.reply_message_id = attachment['reply_id']
 
@@ -111,3 +112,18 @@ class Message:
                     message_page = call_api(f'direct_messages', self.token, params=params, except_message='Error fetching reply information')['direct_messages']
 
         return None
+
+    def get_emoji_links(self, resolution: int = 2) -> List | None:
+        """
+        @brief  Gets a list of URLs to images to represent the GroupMe Powerup emojis used in the message
+        @param  resolution (int): An integer specifying the resolution of the emoji image according to the following scale:
+            - 1: 160dpi
+            - 2: 240dpi (default)
+            - 3: 320dpi
+            - 4: 480dpi
+            - 5: 640dpi
+        @return
+            - (List) A list of URLs, one to each powerup emoji used in the message, in order
+            - (None) If the message contains no emojis, or invalid emoji mappings
+        """
+        return get_emoji_links(self.emoji_mappings, resolution)
