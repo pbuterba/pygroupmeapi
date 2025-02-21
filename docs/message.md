@@ -12,12 +12,26 @@ The following fields are available to access on objects of the Message class
 + `text` - A string containing the text of the message
 + `is_group` - A boolean flag indicating if the message was sent in a group versus a direct message
 + `img_urls` - A list of strings containing the URLs for all images included in the message
-+ `emoji_mappings` - A dictionary mapping the emoji placeholder character for the message, to the charmap entries for the emojis. See the [GroupMe Docs](https://dev.groupme.com/docs/v3)
-and the [GroupMe emoji docs](https://github.com/groupme-js/GroupMeCommunityDocs/blob/master/emoji.md) for more info
-+ reply_message_id - A string containing the id of the message to which the given message is a reply to. If the message is not a reply, this field has the value `None`
++ `emoji_mappings` - The charmap entries for any GroupMe powerup emojis used in the message. See the [GroupMe Docs](https://dev.groupme.com/docs/v3)
+and the [GroupMe emoji docs](https://github.com/groupme-js/GroupMeCommunityDocs/blob/master/emoji.md) for more info. Defaults to `None` type if no powerup emojis
+are used in the message
++ `reply_message_id` - A string containing the id of the message to which the given message is a reply to. If the message is not a reply, this field has the value `None`
 
 ## Methods
 The following methods may be called on objects of the Message class:
+```
+get_emoji_links(resolution)
+```
+Downloads the image files corresponding to each powerup emoji used in the message, to the current working directory of the script, and returns a `List` containing the full URLs to
+each of the downloaded local files.
+
+**Parameters**:
++ `resolution` - *Optional*. An integer representing the resolution option to use when downloading the emoji image files:
+  + 1: 160dpi
+  + 2: 240dpi (default)
+  + 3: 320dpi
+  + 4: 480dpi
+  + 5: 640dpi
 ```
 replied_message()
 ```
