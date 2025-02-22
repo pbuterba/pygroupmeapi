@@ -32,6 +32,12 @@ available are [`Group`](docs/group.md), [`DirectMessage`](docs/direct_message.md
 See the [individual APIs](docs) for each object to see more information on their attributes and methods.
 
 ## Changelog
++ v2.0.0 - February 21st, 2025
+  + Made timeout for API call throttling configurable
+  + Changed Message `emoji_mappings` field to contain just the charmap as a nested list, instead of a dictionary with the emoji replacement character as a key
+  + Added `emoji_replacement_char` field to `Message` class, containing the character that is substituted in for powerup emojis
+  + Added methods to download and subsequently delete local image files for powerup emojis used in a `Message` instance
+  + Added method to obtain information about messages that are replied to by other messages
 + v1.0.3 - December 20th, 2024
   + Added check for API call throttling
 + v1.0.2 - September 5th, 2024
