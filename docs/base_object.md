@@ -18,17 +18,19 @@ The following fields are available to access on objects of the GroupMe class
 ## Methods
 The following methods may be called on objects of the GroupMe class
 ```
-get_chat(chat_name, is_dm)
+get_chat(chat_name, timeout, is_dm)
 ```
 Returns a `Chat` object representing a GroupMe chat to which the user has access.
 
 **Parameters:**
 + `chat_name` - The name of the chat to be returned
++ `timeout` - *Optional*. The number of seconds that should be waited before re-attempting an API call if a call is denied due to receiving too many API calls in a given period of
+time. Defaults to 1 second.
 + `is_dm` - *Optional*. A performance enhancing flag, which defaults to false. If set to false, all groups will be searched to find a match to the provided chat name, before searching
 any direct messages. If instead this flag is set to true, the search will traverse over the user's direct message channels, without checking any groups.
 
 ```
-get_chats(used_after, created_before, verbose)
+get_chats(used_after, created_before, timeout, verbose)
 ```
 Returns a list of `Chat` objects representing all or a subset of all of the user's chats
 
@@ -38,6 +40,8 @@ parameter is specified, only chats which have had at least one message sent AT o
 been used recently.
 + `created_before` - *Optional*. A string representing a date and time, formatted either as "MM/dd/yyyy" or "MM/dd/yyyy hh:mm:ss". If the former, a time of 23:59:59 is assumed. If this
 parameter is specified, only chats which were created AT or BEFORE the specified time will be returned.
++ `timeout` - *Optional*. The number of seconds that should be waited before re-attempting an API call if a call is denied due to receiving too many API calls in a given period of
+time. Defaults to 1 second.
 + `verbose` - *Optional*. A boolean flag, defaults to false. If true, console output will update the user on how many chats have been retrieved from GroupMe so far. Useful for users
 with large numbers of chats, since the search may take a long time, verbose output will assure the user that the process is still moving.
 
@@ -60,7 +64,9 @@ containing the keyword text.
 be returned, even if these messages do not match the search criteria. Most effective when paired with the `keyword` parameter, to fetch the context immediately following a message
 containing the keyword text.
 + `limit` - *Optional*.  An integer representing the maximum number of messages to be returned by the function. Defaults to -1 which is interpreted as no limit. If more messages would
-be returned, only the oldest ones are returned. *NOTE - Due to the structure of GroupMe's underlying API, messages much be fetched one group at a time. Because of this, all messages need to be fetched before limiting the number, so use of this parameter does not necessarily improve performance on otherwise long searches*
+be returned, only the oldest ones are returned. *NOTE - Due to the structure of GroupMe's underlying API, messages must be fetched one group at a time. Because of this, all messages need to be fetched before limiting the number, so use of this parameter does not necessarily improve performance on otherwise long searches*
++ `timeout` - *Optional*. The number of seconds that should be waited before re-attempting an API call if a call is denied due to receiving too many API calls in a given period of
+time. Defaults to 1 second.
 + `suppress_warning` - *Optional*. Boolean flag that defaults to false. If the `sent_after` parameter is not specified, a warning is output by default stating that the search may take a long time,
 as it will need to search back to the beginning of every chat. The user must type "y" or "n" to confirm continuing with the search. If the `verbose` flag is not set and the user chooses to continue,
 another prompt will appear asking if the user would like to enable verbose mode, since the search is expected to be long. Setting this parameter to true prevents either of these warnings

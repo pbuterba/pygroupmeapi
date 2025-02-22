@@ -3,7 +3,7 @@
 @brief   General purpose utilities for the GroupMe API
 
 @date    6/1/2024
-@updated 12/20/2024
+@updated 2/21/2025
 
 @author Preston Buterbaugh
 """
@@ -19,12 +19,13 @@ BASE_URL = 'https://api.groupme.com/v3/'
 TOKEN_POSTFIX = '?token='
 
 
-def call_api(endpoint: str, token: str, params: Dict | None = None, except_message: str | None = None) -> List | Dict:
+def call_api(endpoint: str, token: str, params: Dict | None = None, timeout: int = 1, except_message: str | None = None) -> List | Dict:
     """
     @brief Makes a get call to the API, handles errors, and returns extracted data
     @param  endpoint (str): The API endpoint to which to send the API request
     @param  token (str): The GroupMe access token
     @param  params (Dict): Parameters to pass into the request
+    @param  timeout        (int): The number of seconds to timeout for before re-attempting an API call, if a "429" error is received
     @param  except_message (str): A message to output if API call fails
     @return:
     """
@@ -37,8 +38,8 @@ def call_api(endpoint: str, token: str, params: Dict | None = None, except_messa
     # Make API call
     response = requests.get(f'{BASE_URL}{endpoint}{TOKEN_POSTFIX}{token}', params=params)
     while response.status_code == 429:
-        print('WARNING! Request blocked due to high request frequency. Waiting 1 second and retrying...')
-        time.sleep(1)
+        print(f'WARNING! Request blocked due to high request frequency. Waiting {print_time(timeout)} and retrying...')
+        time.sleep(timeout)
         response = requests.get(f'{BASE_URL}{endpoint}{TOKEN_POSTFIX}{token}', params=params)
     if response.status_code == 304:
         if endpoint.startswith('groups'):
@@ -63,6 +64,47 @@ def progress_bar(completed: int, total: int) -> str:
     ticks = '=' * ticks
     percent_display = f'{round(progress * 100)}%'
     return f' {ticks}{dashes} {percent_display}'
+
+
+def print_time(seconds: int) -> str:
+    """
+    @brief  Prints a time in hours, minutes, and seconds with units included
+    @param  seconds (int): The total number of seconds
+    @return (str) The time printed in hours, minutes, and seconds with units
+    """
+    # Calculate hours
+    hours = seconds // 3600
+    seconds = seconds - (hours * 3600)
+
+    # Calculate minutes
+    minutes = seconds // 60
+    seconds = seconds - (minutes * 60)
+
+    output_string = ''
+
+    # Output hours
+    if hours > 0:
+        output_string = f'{hours} hour'
+    if hours > 1:
+        output_string = f'{output_string}s'
+    if minutes > 0 or seconds > 0:
+        output_string = f'{output_string} '
+    if seconds == 0:
+        output_string = f'{output_string}and '
+
+    # Output minutes
+    if minutes > 0:
+        output_string = f'{output_string}{minutes} minute'
+    if minutes > 1:
+        output_string = f'{output_string}s'
+
+    # Output seconds
+    if seconds > 0:
+        output_string = f'{output_string} and {seconds} second'
+    if seconds > 1:
+        output_string = f'{output_string}s'
+
+    return output_string
 
 
 class GroupMeException(Exception):

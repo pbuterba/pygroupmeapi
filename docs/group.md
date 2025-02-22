@@ -26,7 +26,7 @@ members()
 Returns a list of strings containing the names of each member of the group
 
 ```
-get_messages(sent_before, sent_after, keyword, before, after, limit, verbose)
+get_messages(sent_before, sent_after, keyword, before, after, limit, timeout, verbose)
 ```
 Returns a list of `Message` objects representing a subset of all messages sent in the group.
 
@@ -44,5 +44,7 @@ be returned, even if these messages do not match the search criteria. Most effec
 containing the keyword text.
 + `limit` - *Optional*.  An integer representing the maximum number of messages to be fetched from the group. Defaults to -1 which is interpreted as no limit. If more messages would
 be returned, only the most recent ones are returned.
++ `timeout` - *Optional*. The number of seconds that should be waited before re-attempting an API call if a call is denied due to receiving too many API calls in a given period of
+time. Defaults to 1 second.
 + `verbose` - *Optional*. Boolean flag that defaults to false. If set to true, console output will update the user on the progress of the search. Useful for searches for large numbers
 of messages. Since these will take a long time to complete, verbose output will assure the user that the process is still moving.

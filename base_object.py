@@ -3,7 +3,7 @@
 @brief   A Python object implementation of the GroupMe API
 
 @date    6/1/2024
-@updated 7/27/2024
+@updated 12/31/2024
 
 @author  Preston Buterbaugh
 @credit  GroupMe API info: https://dev.groupme.com/docs/v3
@@ -37,10 +37,11 @@ class GroupMe:
         self.email = user_info['email']
         self.phone_number = user_info['phone_number']
 
-    def _get_group(self, group_name: str) -> Group | None:
+    def _get_group(self, group_name: str, timeout: int) -> Group | None:
         """
         @brief  Gets a group by the specified name
         @param  group_name (str): The name of the group
+        @param  timeout    (int): The number of seconds to wait before retrying an API call if a 429 error is received
         @return (Group) An object representing the group
         """
         # Get groups
@@ -52,7 +53,7 @@ class GroupMe:
         }
 
         # Loop through groups
-        group_page = call_api(url, self.token, params, 'Unexpected error searching groups')
+        group_page = call_api(url, self.token, params, timeout, 'Unexpected error searching groups')
         while len(group_page) > 0:
             # Loop over page
             for i, group in enumerate(group_page):
@@ -61,14 +62,15 @@ class GroupMe:
 
             # Get next page
             params['page'] = params['page'] + 1
-            group_page = call_api(url, self.token, params, 'Unexpected error searching groups')
+            group_page = call_api(url, self.token, params, timeout, 'Unexpected error searching groups')
 
         return None
 
-    def _get_dm(self, user_name: str) -> DirectMessage | None:
+    def _get_dm(self, user_name: str, timeout: int) -> DirectMessage | None:
         """
         @brief  Gets a group by the specified name
         @param  user_name (str): The name of the other user of the direct message
+        @param  timeout   (int): The number of seconds to wait before retrying an API call if a 429 error is received
         @return (DirectMessage) An object representing the direct message chat
         """
         # Get groups
@@ -79,7 +81,7 @@ class GroupMe:
         }
 
         # Loop through groups
-        dm_page = call_api(url, self.token, params, 'Unexpected error searching direct messages')
+        dm_page = call_api(url, self.token, params, timeout, 'Unexpected error searching direct messages')
         while len(dm_page) > 0:
             # Loop over page
             for dm in dm_page:
@@ -88,36 +90,38 @@ class GroupMe:
 
             # Get next page
             params['page'] = params['page'] + 1
-            dm_page = call_api(url, self.token, params, 'Unexpected error searching direct messages')
+            dm_page = call_api(url, self.token, params, timeout, 'Unexpected error searching direct messages')
 
         return None
 
-    def get_chat(self, chat_name: str, is_dm: bool = False) -> Chat:
+    def get_chat(self, chat_name: str, timeout: int = 1, is_dm: bool = False) -> Chat:
         """
         @brief Returns an object for a chat
         @param chat_name (str): The name of the chat to return
+        @param timeout   (int): The number of seconds to wait before retrying an API call if a 429 error is received
         @param is_dm (bool): Performance enhancing flag to specify that the desired chat is a direct message
                              if false, search begins with groups (as opposed to DMs), which can be time-consuming
                              if the user has a lot of groups
         @return (Chat) A GroupMe chat object
         """
         if is_dm:
-            chat = self._get_dm(chat_name)
+            chat = self._get_dm(chat_name, timeout)
         else:
-            chat = self._get_group(chat_name)
+            chat = self._get_group(chat_name, timeout)
             if chat is None:
-                chat = self._get_dm(chat_name)
+                chat = self._get_dm(chat_name, timeout)
 
         if chat is None:
             raise GroupMeException(f'No chat found with the name {chat_name}')
         return chat
 
-    def get_chats(self, used_after: str = '', created_before: str = '', verbose: bool = False) -> List:
+    def get_chats(self, used_after: str = '', created_before: str = '', timeout: int = 1, verbose: bool = False) -> List:
         """
         @brief Returns a list of all the user's chats
         @param used_after     (str): String specifying how recently the chat should have been used. If empty, all groups are fetched
         @param created_before (str): String specifying a minimum age (in time) or a date before which a chat must have been created
                                      to be included. If empty, groups are fetched regardless of creation time
+        @param timeout        (int): The number of seconds to wait before retrying an API call if a 429 error is received
         @param verbose        (bool): If output should be printed showing progress
         @return (List) A list of GroupMe Chat objects
         """
@@ -138,7 +142,7 @@ class GroupMe:
         }
 
         # Loop through all group pages
-        group_page = call_api(url, self.token, params=params, except_message='Unexpected error fetching groups')
+        group_page = call_api(url, self.token, params=params, timeout=timeout, except_message='Unexpected error fetching groups')
         in_range = True
         num_groups = 0
         num_skipped = 0
@@ -274,7 +278,7 @@ class GroupMe:
 
         return chats
 
-    def get_messages(self, sent_before: str = '', sent_after: str = '', keyword: str = '', before: int = 0, after: int = 0, limit: int = -1, suppress_warning: bool = False, verbose: bool = False) -> List:
+    def get_messages(self, sent_before: str = '', sent_after: str = '', keyword: str = '', before: int = 0, after: int = 0, limit: int = -1, timeout: int = 1, suppress_warning: bool = False, verbose: bool = False) -> List:
         """
         @brief Searches for messages meeting the given criteria
         @param sent_before      (str):  A date string formatted either as "MM/dd/yyyy or MM/dd/yyyy hh:mm:ss" indicating the
@@ -285,6 +289,7 @@ class GroupMe:
         @param before           (int):  The number of messages before each selected message to include in the returned set
         @param after            (int):  The number of messages after each selected message to include in the returned set
         @param limit            (int):  A limit of messages to fetch. -1 for no limit
+        @param timeout          (int):  The number of seconds to wait before retrying an API call if a 429 error is received
         @param suppress_warning (bool): If no before or after dates are specified, the search is will need to traverse many
                                         groups and messages. A prompt is displayed by default requiring the user to confirm the
                                         search. Specifying this parameter as true bypasses this prompt, and immediately
@@ -310,14 +315,14 @@ class GroupMe:
 
         start = time.time()
 
-        chats = self.get_chats(used_after=sent_after, created_before=sent_before, verbose=verbose)
+        chats = self.get_chats(used_after=sent_after, created_before=sent_before, timeout=timeout, verbose=verbose)
 
         messages = []
         for chat in chats:
-            messages = messages + chat.get_messages(sent_before=sent_before, sent_after=sent_after, keyword=keyword, before=before, after=after, verbose=verbose)
+            messages = messages + chat.get_messages(sent_before=sent_before, sent_after=sent_after, keyword=keyword, before=before, after=after, timeout=timeout, verbose=verbose)
 
         # Clean up result set
-        messages.sort(key=lambda message: message.time_epoch)
+        messages.sort(key=lambda chat_message: chat_message.time_epoch)
 
         if before or after:
             if verbose:
