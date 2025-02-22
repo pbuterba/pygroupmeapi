@@ -3,13 +3,14 @@
 @brief      Class representing a GroupMe message object
 
 @date       7/23/2024
-@updated    2/20/2025
+@updated    2/21/2025
 
 @author     Preston Buterbaugh
 @credit     GroupMe API info: https://dev.groupme.com/docs/v3
 """
 # Imports
 from __future__ import annotations
+import os
 from typing import List, Dict
 
 from groupme.common_utils import call_api
@@ -40,6 +41,8 @@ class Message:
         self.is_group = is_group
         self.image_urls = []
         self.emoji_mappings = None
+        self.emoji_replacement_char = None
+        self.emoji_urls = None
         self.reply_message_id = None
         self.token = token
         if 'attachments' in data.keys():
@@ -113,17 +116,24 @@ class Message:
 
         return None
 
-    def get_emoji_links(self, resolution: int = 2) -> List | None:
+    def download_emojis(self, resolution: int = 2):
         """
-        @brief  Gets a list of URLs to images to represent the GroupMe Powerup emojis used in the message
+        @brief  Downloads image files of all of GroupMe's "powerup" emojis that are used in the message, and populates
+        the object's "emoji_urls" field with a list of URLs to these images
         @param  resolution (int): An integer specifying the resolution of the emoji image according to the following scale:
             - 1: 160dpi
             - 2: 240dpi (default)
             - 3: 320dpi
             - 4: 480dpi
             - 5: 640dpi
-        @return
-            - (List) A list of URLs, one to each powerup emoji used in the message, in order
-            - (None) If the message contains no emojis, or invalid emoji mappings
         """
-        return get_emoji_links(self.emoji_mappings, resolution)
+        self.emoji_urls = get_emoji_links(self.emoji_mappings, resolution)
+
+    def delete_local_emojis(self):
+        """
+        @brief  Deletes any image files downloaded with the download_emojis() function
+        """
+        if self.emoji_urls is not None:
+            for url in self.emoji_urls:
+                os.remove(url)
+            self.emoji_urls = None
