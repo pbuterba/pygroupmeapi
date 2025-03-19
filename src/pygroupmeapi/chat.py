@@ -18,7 +18,7 @@
 @brief   Classes to represent different kinds of GroupMe chats
 
 @date    6/1/2024
-@updated 2/18/2025
+@updated 3/18/2025
 
 @author Preston Buterbaugh
 @credit  GroupMe API info: https://dev.groupme.com/docs/v3
@@ -26,9 +26,9 @@
 # Imports
 from typing import List, Dict
 
-from groupme.common_utils import call_api, progress_bar
-from groupme.message import Message
-from groupme.time_functions import string_to_epoch, epoch_to_string, epoch_to_month_year
+from .common_utils import call_api, progress_bar
+from .message import Message
+from .time_functions import string_to_epoch, epoch_to_string, epoch_to_month_year
 
 
 class Chat:

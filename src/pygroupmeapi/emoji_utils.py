@@ -18,7 +18,7 @@
 @brief      A script for handling GroupMe's "powerup" emojis
 
 @date       2/19/2025
-@updated    2/20/2025
+@updated    3/18/2025
 
 @author     Preston Buterbaugh
 @credit     https://github.com/groupme-js/GroupMeCommunityDocs/blob/master/emoji.md
@@ -32,7 +32,7 @@ from zipfile import ZipFile
 
 import requests
 
-from groupme.common_utils import GroupMeException
+from .common_utils import GroupMeException
 
 
 POWERUP_API = 'https://powerup.groupme.com/powerups'

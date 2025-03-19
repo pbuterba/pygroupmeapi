@@ -18,7 +18,7 @@
 @brief   A Python object implementation of the GroupMe API
 
 @date    6/1/2024
-@updated 12/31/2024
+@updated 3/18/2025
 
 @author  Preston Buterbaugh
 @credit  GroupMe API info: https://dev.groupme.com/docs/v3
@@ -31,9 +31,9 @@ import requests
 import time
 from typing import List
 
-from groupme.chat import Chat, Group, DirectMessage
-from groupme.common_utils import BASE_URL, TOKEN_POSTFIX, call_api, progress_bar, GroupMeException
-from groupme.time_functions import to_seconds
+from .chat import Chat, Group, DirectMessage
+from .common_utils import BASE_URL, TOKEN_POSTFIX, call_api, progress_bar, GroupMeException
+from .time_functions import to_seconds
 
 
 class GroupMe:

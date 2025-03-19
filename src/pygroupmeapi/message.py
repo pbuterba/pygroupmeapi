@@ -18,7 +18,7 @@
 @brief      Class representing a GroupMe message object
 
 @date       7/23/2024
-@updated    2/21/2025
+@updated    3/18/2025
 
 @author     Preston Buterbaugh
 @credit     GroupMe API info: https://dev.groupme.com/docs/v3
@@ -26,11 +26,11 @@
 # Imports
 from __future__ import annotations
 import os
-from typing import List, Dict
+from typing import Dict
 
-from groupme.common_utils import call_api
-from groupme.emoji_utils import get_emoji_links
-from groupme.time_functions import epoch_to_string
+from .common_utils import call_api
+from .emoji_utils import get_emoji_links
+from .time_functions import epoch_to_string
 
 
 class Message:

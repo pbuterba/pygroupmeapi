@@ -1,0 +1,26 @@
+[build-system]
+requires = ["hatchling", "wheel"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pygroupmeapi"
+version = "2.0.0"
+authors = [
+    {name = "Preston Buterbaugh", email = "pbuterba.corp@gmail.com"}
+]
+description = "A Python wrapper around GroupMe's REST API"
+dependencies = [
+    "requests"
+]
+readme = "README.md"
+license = "GPL-3.0"
+license-files = ["LICENSE"]
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent"
+]
+
+[project.urls]
+Homepage = "https://github.com/pbuterba/pygroupmeapi"
+Issues = "https://github.com/pbuterba/pygroupmeapi/issues"

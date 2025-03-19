@@ -13,10 +13,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see https://www.gnu.org/licenses/.
 
-from groupme.base_object import GroupMe
-from groupme.chat import Chat, Group, DirectMessage
-from groupme.message import Message
-from groupme.common_utils import GroupMeException
+from .base_object import GroupMe
+from .chat import Chat, Group, DirectMessage
+from .message import Message
+from .common_utils import GroupMeException
 
 GroupMe = GroupMe
 Chat = Chat
