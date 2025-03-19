@@ -23,15 +23,18 @@ them somewhere secure. This is your token which grants you access to the GroupMe
 fulfilling the role of a combined username and password. As such, they should be treated with the same security level as passwords.
 
 ## Usage
-All the functionality of the API should be accessible through the base [`GroupMe`](docs/base_object.md) object, which can be imported to a file with the following line of code:
+All the functionality of the API should be accessible through the base [`GroupMe`](https://github.com/pbuterba/groupme/blob/main/docs/base_object.md) object,
+which can be imported to a file with the following line of code:
 ```
 from groupme import GroupMe
 ```
 The `GroupMe` object will return values of other object types that are defined in this project, so you may wish to import thsese as well if using Python type hinting. Other classes
-available are [`Group`](docs/group.md), [`DirectMessage`](docs/direct_message.md), `Chat` (a superclass that includes both `Group` and `DirectMessage`), and [`Message`](docs/message.md).
-See the [individual APIs](docs) for each object to see more information on their attributes and methods.
+available are [`Group`](https://github.com/pbuterba/groupme/blob/main/docs/group.md), [`DirectMessage`](https://github.com/pbuterba/groupme/blob/main/docs/direct_message.md),
+`Chat` (a superclass that includes both `Group` and `DirectMessage`), and [`Message`](https://github.com/pbuterba/groupme/blob/main/docs/message.md).
+See the [individual APIs](https://github.com/pbuterba/groupme/tree/main/docs) for each object to see more information on their attributes and methods.
 
 ## Changelog
++ Published to PyPI - March 18th, 2025
 + v2.0.0 - February 21st, 2025
   + Made timeout for API call throttling configurable
   + Changed Message `emoji_mappings` field to contain just the charmap as a nested list, instead of a dictionary with the emoji replacement character as a key

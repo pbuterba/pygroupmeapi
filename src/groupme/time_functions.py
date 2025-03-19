@@ -18,7 +18,7 @@
 @brief   Helper functions to manipulate time objects
 
 @date    6/1/2024
-@updated 7/27/2024
+@updated 3/18/2025
 
 @author Preston Buterbaugh
 """
@@ -26,7 +26,7 @@
 from datetime import datetime
 import time
 
-from groupme.common_utils import GroupMeException
+from .common_utils import GroupMeException
 
 
 def to_seconds(number: int, units: str) -> int:
