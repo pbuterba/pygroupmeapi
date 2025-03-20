@@ -14,11 +14,11 @@
 # along with this program. If not, see https://www.gnu.org/licenses/.
 
 """
-@package groupme
+@package pygroupmeapi
 @brief   Classes to represent different kinds of GroupMe chats
 
 @date    6/1/2024
-@updated 3/18/2025
+@updated 3/20/2025
 
 @author Preston Buterbaugh
 @credit  GroupMe API info: https://dev.groupme.com/docs/v3
@@ -49,7 +49,7 @@ class Chat:
         self.image_url = None
         self.token = None
 
-    def get_messages(self, sent_before: str = '', sent_after: str = '', keyword: str = '', before: int = 0, after: int = 0, limit: int = -1, verbose: bool = False) -> List:
+    def get_messages(self, sent_before: str = '', sent_after: str = '', keyword: str = '', before: int = 0, after: int = 0, limit: int = -1, timeout: int = 1, verbose: bool = False) -> List:
         """
         @brief  Gets all messages in a chat matching the specified criteria
         @param  sent_before  (int):  The time prior to which all messages returned should have been sent
@@ -58,6 +58,8 @@ class Chat:
         @param  before       (int):  The number of messages to fetch before each message matching the search criteria
         @param  after        (int):  The number of messages to fetch after each message matching the search criteria
         @param  limit        (int):  The maximum number of messages to return. -1 returns all matching messages
+        @param  timeout      (int):  The number of seconds to wait after receiving a 429 (throttled) response from the API,
+                                     before trying again. Defaults to 1 second
         @param  verbose      (bool): If output should be displayed indicating progress made in the query
         @return (List) A list of Message objects
         """
@@ -249,7 +251,7 @@ def page_through_messages(chat_id: str, token: str, name: str, is_group: bool, s
     if verbose:
         print(f'\rSelected {len(messages)} of {total_messages} messages from {name}')
 
-    messages.sort(key=lambda message: message.time_epoch)
+    messages.sort(key=lambda fetched_message: fetched_message.time_epoch)
     return messages
 
 
