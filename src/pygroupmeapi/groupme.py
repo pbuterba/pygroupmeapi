@@ -14,7 +14,7 @@
 # along with this program. If not, see https://www.gnu.org/licenses/.
 
 """
-@package groupme
+@package pygroupmeapi
 @brief   A Python object implementation of the GroupMe API
 
 @date    6/1/2024

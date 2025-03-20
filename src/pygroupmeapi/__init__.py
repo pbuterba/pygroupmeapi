@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see https://www.gnu.org/licenses/.
 
-from .base_object import GroupMe
+from .groupme import GroupMe
 from .chat import Chat, Group, DirectMessage
 from .message import Message
 from .common_utils import GroupMeException

@@ -14,7 +14,7 @@
 # along with this program. If not, see https://www.gnu.org/licenses/.
 
 """
-@package groupme
+@package pygroupmeapi
 @brief   Classes to represent different kinds of GroupMe chats
 
 @date    6/1/2024

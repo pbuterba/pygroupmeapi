@@ -14,7 +14,7 @@
 # along with this program. If not, see https://www.gnu.org/licenses/.
 
 """
-@package    groupme
+@package    pygroupmeapi
 @brief      A script for handling GroupMe's "powerup" emojis
 
 @date       2/19/2025

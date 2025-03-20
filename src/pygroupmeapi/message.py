@@ -14,7 +14,7 @@
 # along with this program. If not, see https://www.gnu.org/licenses/.
 
 """
-@package    groupme
+@package    pygroupmeapi
 @brief      Class representing a GroupMe message object
 
 @date       7/23/2024
