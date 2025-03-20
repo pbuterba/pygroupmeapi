@@ -23,17 +23,20 @@ them somewhere secure. This is your token which grants you access to the GroupMe
 fulfilling the role of a combined username and password. As such, they should be treated with the same security level as passwords.
 
 ## Usage
-All the functionality of the API should be accessible through the base [`GroupMe`](https://github.com/pbuterba/groupme/blob/main/docs/base_object.md) object,
+All the functionality of the API is accessible through the base [`GroupMe`](https://github.com/pbuterba/groupme/blob/main/docs/groupme.md) object,
 which can be imported to a file with the following line of code:
 ```
 from pygroupmeapi import GroupMe
 ```
-The `GroupMe` object will return values of other object types that are defined in this project, so you may wish to import thsese as well if using Python type hinting. Other classes
+The `GroupMe` object will return values of other object types that are defined in this project, so you may wish to import these as well if using Python type hinting. Other classes
 available are [`Group`](https://github.com/pbuterba/pygroupmeapi/blob/main/docs/group.md), [`DirectMessage`](https://github.com/pbuterba/pygroupmeapi/blob/main/docs/direct_message.md),
 `Chat` (a superclass that includes both `Group` and `DirectMessage`), and [`Message`](https://github.com/pbuterba/groupme/blob/main/docs/message.md).
 See the [individual APIs](https://github.com/pbuterba/pygroupmeapi/tree/main/docs) for each object to see more information on their attributes and methods.
 
 ## Changelog
++ v2.0.1 - March 20th, 2025
+  + Added `timeout` parameter to `get_messages()` method on `Chat` superclass, which previously prevented linters from recognizing it as valid
+  + Re-labeled "base object" as "groupme"
 + Published to PyPI - March 19th, 2025
 + v2.0.0 - February 21st, 2025
   + Made timeout for API call throttling configurable
