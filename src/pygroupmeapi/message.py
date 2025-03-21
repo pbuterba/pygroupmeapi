@@ -18,7 +18,7 @@
 @brief      Class representing a GroupMe message object
 
 @date       7/23/2024
-@updated    3/18/2025
+@updated    3/20/2025
 
 @author     Preston Buterbaugh
 @credit     GroupMe API info: https://dev.groupme.com/docs/v3
@@ -104,7 +104,7 @@ class Message:
                 message_page = call_api(f'groups/{chat_id}/messages', self.token, params=params, except_message='Error fetching reply information')['messages']
             else:
                 params = {
-                    'other_user': chat_id,
+                    'other_user_id': chat_id,
                     'before_id': last_id
                 }
                 message_page = call_api('direct_messages', self.token, params=params, except_message='Error fetching reply information')['direct_messages']
@@ -124,7 +124,7 @@ class Message:
                     message_page = call_api(f'groups/{chat_id}/messages', self.token, params=params, except_message='Error fetching reply information')['messages']
                 else:
                     params = {
-                        'other_user': chat_id,
+                        'other_user_id': chat_id,
                         'before_id': last_id
                     }
                     message_page = call_api(f'direct_messages', self.token, params=params, except_message='Error fetching reply information')['direct_messages']
