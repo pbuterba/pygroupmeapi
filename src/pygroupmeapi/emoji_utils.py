@@ -60,13 +60,16 @@ def get_emoji_links(charmap: List, resolution: int) -> List | None:
 
     # Lists to hold emoji data
     emoji_urls = []
-    cached_charmap_entries = []
+    cached_charmap_entries = {}
     downloaded_packs = []
 
     # Loop over all charmap entries
     for emoji in charmap:
+        emoji_key = f'{emoji[0]}_{emoji[1]}'
+
         # Skip if already cached
-        if emoji in cached_charmap_entries:
+        if emoji_key in cached_charmap_entries.keys():
+            emoji_urls.append(f'{os.getcwd()}\\{cached_charmap_entries[emoji_key]}')
             continue
 
         # Unpack charmap entry
@@ -102,8 +105,8 @@ def get_emoji_links(charmap: List, resolution: int) -> List | None:
             zip_file.close()
             os.rename(f'{emoji_index}.png', f'{transliteration}.png')
 
-            emoji_urls.append(f'{os.getcwd()}\\{transliteration}.png')
-            cached_charmap_entries.append(emoji)
+            cached_charmap_entries[emoji_key] = f'{transliteration}.png'
+        emoji_urls.append(f'{os.getcwd()}\\{transliteration}.png')
 
     # Delete zip archives
     for pack in downloaded_packs:
