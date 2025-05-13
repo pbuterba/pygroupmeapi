@@ -18,7 +18,7 @@
 @brief      A script for handling GroupMe's "powerup" emojis
 
 @date       2/19/2025
-@updated    3/18/2025
+@updated    5/13/2025
 
 @author     Preston Buterbaugh
 @credit     https://github.com/groupme-js/GroupMeCommunityDocs/blob/master/emoji.md
@@ -55,7 +55,7 @@ def get_emoji_links(charmap: List, resolution: int) -> List | None:
     # Request emoji data
     response = requests.get(POWERUP_API)
     if response.status_code != 200:
-        raise GroupMeException(f'Could not fetch powerup emoji data. Request returned {response.status_code}')
+        raise GroupMeException(f'Could not fetch powerup emoji data. Response code {response.status_code}')
     emoji_packs = json.loads(response.text)['powerups']
 
     # Lists to hold emoji data
@@ -84,25 +84,26 @@ def get_emoji_links(charmap: List, resolution: int) -> List | None:
         transliteration = emoji_pack['meta']['transliterations'][emoji_index]
 
         # Download emoji pack if not already downloaded
-        if f'pack_{pack_id}.zip' not in downloaded_packs:
-            zip_url = emoji_pack['meta']['inline'][resolution - 1]['zip_url']
-            response = requests.get(zip_url, stream=True)
-            if not response.ok:
-                raise GroupMeException('Failed to retrieve emoji images')
-            zip_file = open(f'pack_{pack_id}.zip', 'wb')
-            for chunk in response.iter_content(chunk_size=128):
-                zip_file.write(chunk)
+        if not os.path.exists(f'{os.getcwd()}\\{transliteration}.png'):
+            if f'pack_{pack_id}.zip' not in downloaded_packs:
+                zip_url = emoji_pack['meta']['inline'][resolution - 1]['zip_url']
+                response = requests.get(zip_url, stream=True)
+                if not response.ok:
+                    raise GroupMeException('Failed to retrieve emoji images')
+                zip_file = open(f'pack_{pack_id}.zip', 'wb')
+                for chunk in response.iter_content(chunk_size=128):
+                    zip_file.write(chunk)
+                zip_file.close()
+                downloaded_packs.append(f'pack_{pack_id}.zip')
+
+            # Extract image
+            zip_file = ZipFile(f'{os.getcwd()}\\pack_{pack_id}.zip')
+            zip_file.extract(f'{emoji_index}.png', f'{os.getcwd()}')
             zip_file.close()
-            downloaded_packs.append(f'pack_{pack_id}.zip')
+            os.rename(f'{emoji_index}.png', f'{transliteration}.png')
 
-        # Extract image
-        zip_file = ZipFile(f'{os.getcwd()}\\pack_{pack_id}.zip')
-        zip_file.extract(f'{emoji_index}.png', f'{os.getcwd()}')
-        zip_file.close()
-        os.rename(f'{emoji_index}.png', f'{transliteration}.png')
-
-        emoji_urls.append(f'{os.getcwd()}\\{transliteration}.png')
-        cached_charmap_entries.append(emoji)
+            emoji_urls.append(f'{os.getcwd()}\\{transliteration}.png')
+            cached_charmap_entries.append(emoji)
 
     # Delete zip archives
     for pack in downloaded_packs:
