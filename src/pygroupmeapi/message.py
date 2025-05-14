@@ -18,7 +18,7 @@
 @brief      Class representing a GroupMe message object
 
 @date       7/23/2024
-@updated    3/20/2025
+@updated    5/14/2025
 
 @author     Preston Buterbaugh
 @credit     GroupMe API info: https://dev.groupme.com/docs/v3
@@ -28,7 +28,7 @@ from __future__ import annotations
 import os
 from typing import Dict
 
-from .common_utils import call_api
+from .requester import Requester
 from .emoji_utils import get_emoji_links
 from .time_functions import epoch_to_string
 
@@ -38,13 +38,13 @@ class Message:
     @brief Class representing a GroupMe message
     """
 
-    def __init__(self, name: str, is_group: bool, data: Dict, token: str):
+    def __init__(self, name: str, is_group: bool, data: Dict, requester: Requester):
         """
         @brief Message constructor
-        @param name     (str):  The name of the chat in which the message was sent
-        @param is_group (bool): If the message was sent in a group (as opposed to a direct message)
-        @param data     (Dict): The dictionary of data representing the message, as returned by the API
-        @param token    (str):  The user's GroupMe token used for fetching further data from the API
+        @param name      (str):       The name of the chat in which the message was sent
+        @param is_group  (bool):      If the message was sent in a group (as opposed to a direct message)
+        @param data      (Dict):      The dictionary of data representing the message, as returned by the API
+        @param requester (Requester): The requester object for the session (instantiated at the user level)
         """
         self.chat = name
         self.id = data['id']
@@ -59,7 +59,7 @@ class Message:
         self.emoji_replacement_char = None
         self.emoji_urls = None
         self.reply_message_id = None
-        self.token = token
+        self._requester = requester
         if 'attachments' in data.keys():
             for attachment in data['attachments']:
                 if attachment['type'] == 'image':
@@ -75,60 +75,26 @@ class Message:
         @brief  Returns the message that the current message is a reply to, or None if it is not a reply
         @return
             - (Message) The message being replied to
-            - (None)    If the message is not a reply
+            - (None)    If the message is not a reply, or the message to which it is a reply could not be found
         """
         if self.reply_message_id is not None:
             # Get chat in which message was sent
-            chat_id = None
+            _, chat_data = self._requester.request_chat(self.chat, self.is_group)
+            if chat_data is None:
+                return None
             if self.is_group:
-                groups = call_api('groups', self.token)
-                for group in groups:
-                    if group['name'] == self.chat:
-                        chat_id = group['id']
-                        break
+                chat_id = chat_data['id']
             else:
-                dms = call_api('chats', self.token)
-                for dm in dms:
-                    if dm['other_user']['name'] == self.chat:
-                        chat_id = dm['other_user']['id']
-                        break
+                chat_id = chat_data['other_user']['id']
 
-            # Get first page of messages
-            chat_name = self.chat
-            last_id = self.id
-            if self.is_group:
-                params = {
-                    'before_id': last_id,
-                    'limit': 100
-                }
-                message_page = call_api(f'groups/{chat_id}/messages', self.token, params=params, except_message='Error fetching reply information')['messages']
+            chat_type = 'G' if self.is_group else 'D'
+            message_cache_id = f'{chat_type}_{chat_id}_{self.reply_message_id}'
+            message_data = self._requester.request_message(message_cache_id)
+            if message_data is None:
+                replied_message = None
             else:
-                params = {
-                    'other_user_id': chat_id,
-                    'before_id': last_id
-                }
-                message_page = call_api('direct_messages', self.token, params=params, except_message='Error fetching reply information')['direct_messages']
-
-            # Loop until reply is found
-            while len(message_page) > 0:
-                for message in message_page:
-                    if message['id'] == self.reply_message_id:
-                        return Message(chat_name, self.is_group, message, self.token)
-                    last_id = message['id']
-
-                if self.is_group:
-                    params = {
-                        'before_id': last_id,
-                        'limit': 100
-                    }
-                    message_page = call_api(f'groups/{chat_id}/messages', self.token, params=params, except_message='Error fetching reply information')['messages']
-                else:
-                    params = {
-                        'other_user_id': chat_id,
-                        'before_id': last_id
-                    }
-                    message_page = call_api(f'direct_messages', self.token, params=params, except_message='Error fetching reply information')['direct_messages']
-
+                replied_message = Message(self.chat, self.is_group, message_data, self._requester)
+            return replied_message
         return None
 
     def download_emojis(self, resolution: int = 2):
