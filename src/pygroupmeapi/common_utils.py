@@ -64,22 +64,24 @@ def print_time(seconds: int) -> str:
     # Output hours
     if hours > 0:
         output_string = f'{hours} hour'
-    if hours > 1:
-        output_string = f'{output_string}s'
-    if minutes > 0 or seconds > 0:
-        output_string = f'{output_string} '
-    if seconds == 0:
-        output_string = f'{output_string}and '
+        if hours > 1:
+            output_string = f'{output_string}s'
+        if minutes > 0 or seconds > 0:
+            output_string = f'{output_string} '
+        if hours > 0 and seconds == 0:
+            output_string = f'{output_string}and '
 
     # Output minutes
     if minutes > 0:
         output_string = f'{output_string}{minutes} minute'
-    if minutes > 1:
-        output_string = f'{output_string}s'
+        if minutes > 1:
+            output_string = f'{output_string}s'
+        if seconds > 0:
+            output_string = f'{output_string} and '
 
     # Output seconds
     if seconds > 0:
-        output_string = f'{output_string} and {seconds} second'
+        output_string = f'{output_string}{seconds} second'
     if seconds > 1:
         output_string = f'{output_string}s'
 
